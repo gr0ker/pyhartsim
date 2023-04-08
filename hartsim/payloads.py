@@ -123,6 +123,44 @@ class F32(Payload):
         self.set_value(struct.unpack('>f', self.__serialized))
 
 
+class Ascii(Payload):
+    def __init__(self,
+                 size: int,
+                 value: str = "",):
+        self.__size = MIN_INTEGER_SIZE if size < MIN_INTEGER_SIZE else size
+        self.set_value(value)
+
+    def get_size(self):
+        return self.__size
+
+    def get_value(self) -> str:
+        return self.__value
+
+    def set_value(self, value: str):
+        if (len(value) > self.__size):
+            self.__value = value[:self.__size]
+        else:
+            self.__value = value
+
+    def __next__(self):
+        if self._offset < len(self.__value):
+            next = ord(self.__value[self._offset])
+            self._offset += 1
+            return next
+        elif self._offset < self.__size:
+            next = ord(" ")
+            self._offset += 1
+            return next
+        else:
+            raise StopIteration
+
+    def deserialize(self, iterator: Iterator[int]):
+        value = ""
+        for _ in range(0, self.__size):
+            value += chr(next(iterator))
+        self.set_value(value)
+
+
 @dataclass
 class PayloadSequence(Payload):
     def __iter__(self):

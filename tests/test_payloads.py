@@ -4,7 +4,7 @@ import unittest
 from attr import dataclass
 
 from hartsim import Unsigned, U8, U16, U24, U32, PayloadSequence
-from hartsim.payloads import F32
+from hartsim.payloads import F32, Ascii
 
 
 @dataclass
@@ -267,18 +267,6 @@ class TestPayloads(unittest.TestCase):
         target = F32()
         self.assertEqual(target.get_size(), expected)
 
-    def test_payload_sequence_is_serialized(self):
-        expected = bytearray([0x04, 0x03, 0x02, 0x01])
-        target = PayloadSequenceExample()
-        target.first_byte.set_value(0x04)
-        target.second_byte.set_value(0x03)
-        target.third_word.set_value(0x0201)
-        expectedIndex = 0
-        for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
-
     def test_float_deserialize(self):
         size = 4
         serialized = bytearray([0x01, 0x3f, 0x9e, 0x06, 0x4b])
@@ -299,6 +287,72 @@ class TestPayloads(unittest.TestCase):
             self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
             expectedIndex += 1
         self.assertEqual(expectedIndex, size)
+
+    def test_ascii_default_value_is_empty(self):
+        expected = ""
+        target = Ascii(32)
+        self.assertEqual(target.get_value(), expected)
+
+    def test_ascii_min_size_is_one(self):
+        size = 0
+        expected = 1
+        target = Ascii(size)
+        self.assertEqual(target.get_size(), expected)
+
+    def test_ascii_cut_to_size(self):
+        size = 4
+        value = "This is a test"
+        expected = "This"
+        target = Ascii(size)
+        target.set_value(value)
+        self.assertEqual(target.get_value(), expected)
+
+    def test_ascii_deserialize(self):
+        size = 32
+        serialized = bytearray([0x20, 0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x74, 0x65, 0x73, 0x74,
+                               0x2e, 0x20, 0x44, 0x6f, 0x65, 0x73, 0x20, 0x69, 0x74, 0x20, 0x70, 0x61, 0x73, 0x73, 0x3f, 0x20, 0x48, 0x6d])
+        expected = "This is a test. Does it pass? Hm"
+        target = Ascii(size)
+        serialized_iterator = iter(serialized)
+        next(serialized_iterator)
+        target.deserialize(serialized_iterator)
+        self.assertEqual(target.get_value(), expected)
+
+    def test_ascii_serialize(self):
+        size = 32
+        value = "This is a test. Does it pass? Hm"
+        expected = bytearray([0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x74, 0x65, 0x73, 0x74,
+                              0x2e, 0x20, 0x44, 0x6f, 0x65, 0x73, 0x20, 0x69, 0x74, 0x20, 0x70, 0x61, 0x73, 0x73, 0x3f, 0x20, 0x48, 0x6d])
+        expectedIndex = 0
+        target = Ascii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, size)
+
+    def test_ascii_serialize_pad_spaces(self):
+        size = 32
+        value = "This is a test."
+        expected = bytearray([0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x74, 0x65, 0x73, 0x74,
+                              0x2e, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20])
+        expectedIndex = 0
+        target = Ascii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, size)
+
+    def test_payload_sequence_is_serialized(self):
+        expected = bytearray([0x04, 0x03, 0x02, 0x01])
+        target = PayloadSequenceExample()
+        target.first_byte.set_value(0x04)
+        target.second_byte.set_value(0x03)
+        target.third_word.set_value(0x0201)
+        expectedIndex = 0
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
 
     def test_payload_sequence_is_deserialized(self):
         serialized = bytearray([0x09, 0x08, 0x07, 0x06])

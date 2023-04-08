@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import serial
 import time
 from .framingutils import FrameType, HartFrame
-from .payloads import F32, U16, U24, U8, PayloadSequence
+from .payloads import F32, U16, U24, U8, Ascii, PayloadSequence
 
 port = serial.Serial('COM3', baudrate=1200,
                      parity=serial.PARITY_ODD, bytesize=8, stopbits=1)
@@ -20,6 +20,8 @@ config_change_counter = U16(0)
 
 pv_units = U8(12)
 pv_value = F32(1.2345)
+
+long_tag = Ascii(32, "This is a HART device simulator")
 
 
 @dataclass
@@ -53,6 +55,13 @@ class Cmd1Reply (PayloadSequence):
 
 
 @dataclass
+class Cmd20Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = device_status
+    long_tag: U8 = long_tag
+
+
+@dataclass
 class ErrorReply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = device_status
@@ -69,6 +78,8 @@ while True:
                     payload = Cmd0Reply()
                 case 1:
                     payload = Cmd1Reply()
+                case 20:
+                    payload = Cmd20Reply()
                 case _:
                     payload = ErrorReply(response_code=U8(64))
             reply = HartFrame(FrameType.ACK,
