@@ -58,3 +58,27 @@ class Unsigned(Payload):
         for _ in range(0, self.__size):
             value = (value << BITS_IN_BYTE) | (next(iterator) & FULL_BYTE_MASK)
         self.set_value(value)
+
+
+class U8(Unsigned):
+    def __init__(self,
+                 value: int = 0):
+        super().__init__(value, 1)
+
+
+class U16(Unsigned):
+    def __init__(self,
+                 value: int = 0):
+        super().__init__(value, 2)
+
+
+class U24(Unsigned):
+    def __init__(self,
+                 value: int = 0):
+        super().__init__(value, 3)
+
+
+class U32(Unsigned):
+    def __init__(self,
+                 value: int = 0):
+        super().__init__(value, 4)

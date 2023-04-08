@@ -1,6 +1,6 @@
 import unittest
 
-from hartsim import Unsigned
+from hartsim import Unsigned, U8, U16, U24, U32
 
 
 class TestPayloads(unittest.TestCase):
@@ -226,6 +226,26 @@ class TestPayloads(unittest.TestCase):
             self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
             expectedIndex += 1
         self.assertEqual(expectedIndex, size)
+
+    def test_u8_size_is_one(self):
+        expected = 1
+        target = U8()
+        self.assertEqual(target.get_size(), expected)
+
+    def test_u16_size_is_two(self):
+        expected = 2
+        target = U16()
+        self.assertEqual(target.get_size(), expected)
+
+    def test_u24_size_is_three(self):
+        expected = 3
+        target = U24()
+        self.assertEqual(target.get_size(), expected)
+
+    def test_u32_size_is_four(self):
+        expected = 4
+        target = U32()
+        self.assertEqual(target.get_size(), expected)
 
 
 if __name__ == '__main__':
