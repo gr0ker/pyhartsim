@@ -3,6 +3,8 @@ from functools import reduce
 from itertools import repeat
 from typing import Iterator
 
+from attr import dataclass
+
 FULL_BYTE_MASK = 0xFF
 U16_MASK = 0xFFFF
 MIN_INTEGER_SIZE = 1
@@ -82,3 +84,25 @@ class U32(Unsigned):
     def __init__(self,
                  value: int = 0):
         super().__init__(value, 4)
+
+
+@dataclass
+class PayloadSequence(Payload):
+    def __iter__(self):
+        self.__attr_iterator = iter(
+            filter(lambda x: not x.startswith("_"), list(self.__dict__.keys())))
+        self.__byte_iterator = iter(self.__dict__[next(self.__attr_iterator)])
+        return self
+
+    def __next__(self):
+        try:
+            result = next(self.__byte_iterator)
+        except StopIteration:
+            self.__byte_iterator = iter(
+                self.__dict__[next(self.__attr_iterator)])
+            result = next(self.__byte_iterator)
+        return result
+
+    def deserialize(self, iterator: Iterator[int]):
+        for attr in self.__dict__.keys():
+            self.__dict__[attr].deserialize(iterator)

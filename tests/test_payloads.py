@@ -1,6 +1,15 @@
 import unittest
 
-from hartsim import Unsigned, U8, U16, U24, U32
+from attr import dataclass
+
+from hartsim import Unsigned, U8, U16, U24, U32, PayloadSequence
+
+
+@dataclass
+class PayloadSequenceExample(PayloadSequence):
+    first_byte: U8 = U8()
+    second_byte: U8 = U8()
+    third_word: U16 = U16()
 
 
 class TestPayloads(unittest.TestCase):
@@ -246,6 +255,26 @@ class TestPayloads(unittest.TestCase):
         expected = 4
         target = U32()
         self.assertEqual(target.get_size(), expected)
+
+    def test_payload_sequence_is_serialized(self):
+        expected = bytearray([0x04, 0x03, 0x02, 0x01])
+        target = PayloadSequenceExample()
+        target.first_byte.set_value(0x04)
+        target.second_byte.set_value(0x03)
+        target.third_word.set_value(0x0201)
+        expectedIndex = 0
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_payload_sequence_is_deserialized(self):
+        serialized = bytearray([0x09, 0x08, 0x07, 0x06])
+        target = PayloadSequenceExample()
+        target.deserialize(iter(serialized))
+        self.assertEqual(target.first_byte.get_value(), 0x09)
+        self.assertEqual(target.second_byte.get_value(), 0x08)
+        self.assertEqual(target.third_word.get_value(), 0x0706)
 
 
 if __name__ == '__main__':
