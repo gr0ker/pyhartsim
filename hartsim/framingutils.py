@@ -1,5 +1,3 @@
-from abc import abstractmethod
-from dataclasses import dataclass
 from enum import Enum
 from functools import reduce
 from typing import Iterator
@@ -179,15 +177,16 @@ class HartFrame:
         encoded.extend(self.data)
 
         # check byte
-        encoded.append(reduce(lambda x, y: x ^ y, encoded))
+        self.check_sum = reduce(lambda x, y: x ^ y, encoded)
+        encoded.append(self.check_sum)
 
         return encoded
 
     def __repr__(self):
         return f'{self.type} \
 {"PRI" if self.is_primary_master else "SEC"}\
-{" BURST" if self.is_burst else ""} \
-{"".join("{:02X}".format(x) for x in self.long_address) if self.is_long_address else self.short_address} \
-CMD{self.command_number} \
-DATA {"".join("{:02X}".format(x) for x in self.data) if len(self.data) else "NO"} \
-CHK {self.check_sum:02X}'
+{" BST" if self.is_burst else ""} \
+ADR({"".join("{:02X}".format(x) for x in self.long_address) if self.is_long_address else self.short_address}) \
+CMD({self.command_number:03}) \
+DAT({"".join("{:02X}".format(x) for x in self.data) if len(self.data) else "NO"}) \
+SUM({self.check_sum:02X})'

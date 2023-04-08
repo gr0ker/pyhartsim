@@ -1,15 +1,15 @@
 from dataclasses import dataclass
-from types import FrameType
 import serial
 import time
-from hartsim import HartFrame, U16, U24, U8, PayloadSequence
+from .framingutils import FrameType, HartFrame
+from .payloads import U16, U24, U8, PayloadSequence
 
 port = serial.Serial('COM3', baudrate=1200,
                      parity=serial.PARITY_ODD, bytesize=8, stopbits=1)
 port.flush()
 
 short_address = 0
-long_address = bytearray([0x19, 0x73, 0x17, 0xE7, 0x19])
+long_address = bytearray([0x26, 0x06, 0x12, 0x34, 0x56])
 is_burst_mode = False
 
 expanded_device_type = U16(0x2606)
@@ -50,14 +50,13 @@ class ErrorReply (PayloadSequence):
 while True:
     if port.in_waiting:
         data = port.read_all()
-        print(data)
         request = HartFrame.deserialize(iter(data))
-        print(f'Received {request}')
+        print(f'<= {request}')
         if request.is_long_address and request.long_address == long_address or not request.is_long_address and request.short_address == short_address:
             if request.command_number == 0:
                 payload = Cmd0Reply()
             else:
-                payload = ErrorReply(response_code=64)
+                payload = ErrorReply(response_code=U8(64))
             reply = HartFrame(FrameType.ACK,
                               request.command_number,
                               request.is_long_address,
@@ -66,11 +65,11 @@ while True:
                               request.is_primary_master,
                               is_burst_mode,
                               list(payload))
-            print(f'Reply {reply}')
             reply_data = bytearray([0xFF, 0xFF, 0xFF])
             reply_data.extend(reply.to_bytes())
-            print(reply_data)
             port.write(reply_data)
+            print(f'=> {reply}')
+        else:
+            print('=> None')
     else:
-        print('No reply required')
         time.sleep(0.01)
