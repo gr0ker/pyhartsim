@@ -1,8 +1,10 @@
+import math
 import unittest
 
 from attr import dataclass
 
 from hartsim import Unsigned, U8, U16, U24, U32, PayloadSequence
+from hartsim.payloads import F32
 
 
 @dataclass
@@ -256,6 +258,15 @@ class TestPayloads(unittest.TestCase):
         target = U32()
         self.assertEqual(target.get_size(), expected)
 
+    def test_float_default_value_is_nan(self):
+        target = F32()
+        self.assertTrue(math.isnan(target.get_value()))
+
+    def test_float_default_size_is_four(self):
+        expected = 4
+        target = F32()
+        self.assertEqual(target.get_size(), expected)
+
     def test_payload_sequence_is_serialized(self):
         expected = bytearray([0x04, 0x03, 0x02, 0x01])
         target = PayloadSequenceExample()
@@ -267,6 +278,27 @@ class TestPayloads(unittest.TestCase):
             self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
             expectedIndex += 1
         self.assertEqual(expectedIndex, len(expected))
+
+    def test_float_deserialize(self):
+        size = 4
+        serialized = bytearray([0x01, 0x3f, 0x9e, 0x06, 0x4b])
+        expected = 1.2345670461654663,
+        target = F32()
+        serialized_iterator = iter(serialized)
+        next(serialized_iterator)
+        target.deserialize(serialized_iterator)
+        self.assertEqual(target.get_value(), expected)
+
+    def test_float_serialize(self):
+        size = 4
+        value = 1.234567
+        expected = bytearray([0x3f, 0x9e, 0x06, 0x4b])
+        expectedIndex = 0
+        target = F32(value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, size)
 
     def test_payload_sequence_is_deserialized(self):
         serialized = bytearray([0x09, 0x08, 0x07, 0x06])

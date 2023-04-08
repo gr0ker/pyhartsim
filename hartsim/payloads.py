@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from functools import reduce
 from itertools import repeat
+import struct
 from typing import Iterator
 
 from attr import dataclass
@@ -10,6 +11,7 @@ U16_MASK = 0xFFFF
 MIN_INTEGER_SIZE = 1
 MAX_INTEGER_SIZE = 4
 BITS_IN_BYTE = 8
+FLOAT_SIZE = 4
 
 
 class Payload:
@@ -84,6 +86,41 @@ class U32(Unsigned):
     def __init__(self,
                  value: int = 0):
         super().__init__(value, 4)
+
+
+class F32(Payload):
+    def __init__(self,
+                 value: float = float("nan")):
+        self.__size = FLOAT_SIZE
+        self.set_value(value)
+
+    def get_size(self):
+        return self.__size
+
+    def get_value(self):
+        return self.__value
+
+    def set_value(self, value):
+        self.__value = value
+
+    def __iter__(self):
+        self.__serialized = struct.pack("f", self.__value)
+        super().__iter__()
+        return self
+
+    def __next__(self):
+        if self._offset < self.__size:
+            next = self.__serialized[self.__size - self._offset - 1]
+            self._offset += 1
+            return next
+        else:
+            raise StopIteration
+
+    def deserialize(self, iterator: Iterator[int]):
+        self.__serialized = bytearray([0, 0, 0, 0])
+        for i in range(0, self.__size):
+            self.__serialized[i] = (next(iterator) & FULL_BYTE_MASK)
+        self.set_value(struct.unpack('>f', self.__serialized))
 
 
 @dataclass
