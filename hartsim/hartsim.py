@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import serial
 import time
 from .framingutils import FrameType, HartFrame
-from .payloads import U16, U24, U8, PayloadSequence
+from .payloads import F32, U16, U24, U8, PayloadSequence
 
 port = serial.Serial('COM3', baudrate=1200,
                      parity=serial.PARITY_ODD, bytesize=8, stopbits=1)
@@ -17,6 +17,9 @@ device_id: U24 = U24(0x123456)
 device_status = U8()
 extended_device_status = U8()
 config_change_counter = U16(0)
+
+pv_units = U8(12)
+pv_value = F32(1.2345)
 
 
 @dataclass
@@ -42,6 +45,14 @@ class Cmd0Reply (PayloadSequence):
 
 
 @dataclass
+class Cmd1Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = device_status
+    pv_units: U8 = pv_units
+    pv_value: F32 = pv_value
+
+
+@dataclass
 class ErrorReply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = device_status
@@ -53,10 +64,13 @@ while True:
         request = HartFrame.deserialize(iter(data))
         print(f'<= {request}')
         if request.is_long_address and request.long_address == long_address or not request.is_long_address and request.short_address == short_address:
-            if request.command_number == 0:
-                payload = Cmd0Reply()
-            else:
-                payload = ErrorReply(response_code=U8(64))
+            match request.command_number:
+                case 0:
+                    payload = Cmd0Reply()
+                case 1:
+                    payload = Cmd1Reply()
+                case _:
+                    payload = ErrorReply(response_code=U8(64))
             reply = HartFrame(FrameType.ACK,
                               request.command_number,
                               request.is_long_address,
