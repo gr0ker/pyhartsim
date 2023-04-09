@@ -19,23 +19,45 @@ PACKED_ASCII_MASK = 0x3F
 
 
 class Payload:
+    def __init__(self,
+                 is_optional: bool = False):
+        self.__is_optional = is_optional
+        self.__is_skipped = False
+
     def __iter__(self):
         self._offset = 0
         return self
+
+    def is_optional(self):
+        return self.__is_optional
+
+    def is_skipped(self):
+        return self.__is_skipped
+
+    def skip(self):
+        self.__is_skipped = True
+
+    def include(self):
+        self.__is_skipped = False
+
+    def deserialize(self, iterator: Iterator[int]):
+        self._deserialize(iterator)
+        self.include()
 
     @abstractmethod
     def __next__(self):
         pass
 
     @abstractmethod
-    def deserialize(self, iterator: Iterator[int]):
+    def _deserialize(self, iterator: Iterator[int]):
         pass
 
 
 class Unsigned(Payload):
     def __init__(self,
                  value: int = 0,
-                 size: int = MIN_SIZE):
+                 size: int = MIN_SIZE,
+                 is_optional: bool = False):
         self.__size = MIN_SIZE\
             if size < MIN_SIZE\
             else\
@@ -46,6 +68,7 @@ class Unsigned(Payload):
         self.__mask = reduce(lambda x, y: x << 8 | y,
                              repeat(FULL_BYTE_MASK, self.__size))
         self.set_value(value)
+        super().__init__(is_optional)
 
     def get_size(self):
         return self.__size
@@ -67,7 +90,7 @@ class Unsigned(Payload):
         else:
             raise StopIteration
 
-    def deserialize(self, iterator: Iterator[int]):
+    def _deserialize(self, iterator: Iterator[int]):
         value = 0
         for _ in range(0, self.__size):
             value = (value << BITS_IN_BYTE) | (next(iterator) & FULL_BYTE_MASK)
@@ -76,33 +99,39 @@ class Unsigned(Payload):
 
 class U8(Unsigned):
     def __init__(self,
-                 value: int = 0):
-        super().__init__(value, 1)
+                 value: int = 0,
+                 is_optional: bool = False):
+        super().__init__(value, 1, is_optional)
 
 
 class U16(Unsigned):
     def __init__(self,
-                 value: int = 0):
-        super().__init__(value, 2)
+                 value: int = 0,
+                 is_optional: bool = False):
+        super().__init__(value, 2, is_optional)
 
 
 class U24(Unsigned):
     def __init__(self,
-                 value: int = 0):
-        super().__init__(value, 3)
+                 value: int = 0,
+                 is_optional: bool = False):
+        super().__init__(value, 3, is_optional)
 
 
 class U32(Unsigned):
     def __init__(self,
-                 value: int = 0):
-        super().__init__(value, 4)
+                 value: int = 0,
+                 is_optional: bool = False):
+        super().__init__(value, 4, is_optional)
 
 
 class F32(Payload):
     def __init__(self,
-                 value: float = float("nan")):
+                 value: float = float("nan"),
+                 is_optional: bool = False):
         self.__size = FLOAT_SIZE
         self.set_value(value)
+        super().__init__(is_optional)
 
     def get_size(self):
         return self.__size
@@ -126,7 +155,7 @@ class F32(Payload):
         else:
             raise StopIteration
 
-    def deserialize(self, iterator: Iterator[int]):
+    def _deserialize(self, iterator: Iterator[int]):
         self.__serialized = bytearray([0, 0, 0, 0])
         for i in range(0, self.__size):
             self.__serialized[i] = (next(iterator) & FULL_BYTE_MASK)
@@ -136,9 +165,11 @@ class F32(Payload):
 class Ascii(Payload):
     def __init__(self,
                  size: int,
-                 value: str = "",):
+                 value: str = "",
+                 is_optional: bool = False):
         self.__size = MIN_SIZE if size < MIN_SIZE else size
         self.set_value(value)
+        super().__init__(is_optional)
 
     def get_size(self):
         return self.__size
@@ -164,7 +195,7 @@ class Ascii(Payload):
         else:
             raise StopIteration
 
-    def deserialize(self, iterator: Iterator[int]):
+    def _deserialize(self, iterator: Iterator[int]):
         value = ""
         for _ in range(0, self.__size):
             value += chr(next(iterator))
@@ -174,10 +205,12 @@ class Ascii(Payload):
 class PackedAscii(Payload):
     def __init__(self,
                  size: int,
-                 value: str = "",):
+                 value: str = "",
+                 is_optional: bool = False):
         self.__size = MIN_SIZE if size < MIN_SIZE else size
         self.__packed_size = int(ceil(self.__size * 3 / 4))
         self.set_value(value)
+        super().__init__(is_optional)
 
     def get_size(self):
         return self.__size
@@ -238,7 +271,7 @@ class PackedAscii(Payload):
         else:
             raise StopIteration
 
-    def deserialize(self, iterator: Iterator[int]):
+    def _deserialize(self, iterator: Iterator[int]):
         value = bytearray(self.__size)
         for i in range(0, self.__packed_size):
             item = next(iterator)
@@ -266,18 +299,29 @@ class PayloadSequence(Payload):
     def __iter__(self):
         self.__attr_iterator = iter(
             filter(lambda x: not x.startswith("_"), list(self.__dict__.keys())))
-        self.__byte_iterator = iter(self.__dict__[next(self.__attr_iterator)])
+        next_attr = next(self.__attr_iterator)
+        self.__byte_iterator = iter(self.__dict__[next_attr])
         return self
 
     def __next__(self):
         try:
             result = next(self.__byte_iterator)
         except StopIteration:
+            next_attr = next(self.__attr_iterator)
+            while self.__dict__[next_attr].is_optional()\
+                    and self.__dict__[next_attr].is_skipped():
+                next_attr = next(self.__attr_iterator)
             self.__byte_iterator = iter(
-                self.__dict__[next(self.__attr_iterator)])
+                self.__dict__[next_attr])
             result = next(self.__byte_iterator)
         return result
 
-    def deserialize(self, iterator: Iterator[int]):
+    def _deserialize(self, iterator: Iterator[int]):
         for attr in self.__dict__.keys():
-            self.__dict__[attr].deserialize(iterator)
+            try:
+                self.__dict__[attr].deserialize(iterator)
+            except StopIteration:
+                if self.__dict__[attr].is_optional():
+                    self.__dict__[attr].skip()
+                else:
+                    raise

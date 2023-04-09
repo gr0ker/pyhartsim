@@ -2,6 +2,7 @@ import math
 import unittest
 
 from attr import dataclass
+import pytest
 
 from hartsim import Unsigned, U8, U16, U24, U32, PayloadSequence
 from hartsim.payloads import F32, Ascii, PackedAscii
@@ -12,6 +13,13 @@ class PayloadSequenceExample(PayloadSequence):
     first_byte: U8 = U8()
     second_byte: U8 = U8()
     third_word: U16 = U16()
+
+
+@dataclass
+class PayloadSequenceOptionalExample(PayloadSequence):
+    first_byte: U8 = U8()
+    second_byte: U8 = U8()
+    third_word: U16 = U16(is_optional=True)
 
 
 class TestPayloads(unittest.TestCase):
@@ -348,26 +356,6 @@ class TestPayloads(unittest.TestCase):
             expectedIndex += 1
         self.assertEqual(expectedIndex, size)
 
-    def test_payload_sequence_is_serialized(self):
-        expected = bytearray([0x04, 0x03, 0x02, 0x01])
-        target = PayloadSequenceExample()
-        target.first_byte.set_value(0x04)
-        target.second_byte.set_value(0x03)
-        target.third_word.set_value(0x0201)
-        expectedIndex = 0
-        for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
-
-    def test_payload_sequence_is_deserialized(self):
-        serialized = bytearray([0x09, 0x08, 0x07, 0x06])
-        target = PayloadSequenceExample()
-        target.deserialize(iter(serialized))
-        self.assertEqual(target.first_byte.get_value(), 0x09)
-        self.assertEqual(target.second_byte.get_value(), 0x08)
-        self.assertEqual(target.third_word.get_value(), 0x0706)
-
     def test_packed_ascii_value_handling(self):
         size = 32
         value = "`This~is a {test}.`"
@@ -575,6 +563,40 @@ class TestPayloads(unittest.TestCase):
         next(serialized_iterator)
         target.deserialize(serialized_iterator)
         self.assertEqual(target.get_value(), expected)
+
+    def test_payload_sequence_is_serialized(self):
+        expected = bytearray([0x04, 0x03, 0x02, 0x01])
+        target = PayloadSequenceExample()
+        target.first_byte.set_value(0x04)
+        target.second_byte.set_value(0x03)
+        target.third_word.set_value(0x0201)
+        expectedIndex = 0
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_payload_sequence_is_deserialized(self):
+        serialized = bytearray([0x09, 0x08, 0x07, 0x06])
+        target = PayloadSequenceExample()
+        target.deserialize(iter(serialized))
+        self.assertEqual(target.first_byte.get_value(), 0x09)
+        self.assertEqual(target.second_byte.get_value(), 0x08)
+        self.assertEqual(target.third_word.get_value(), 0x0706)
+
+    def test_payload_sequence_raises_when_not_enough_bytes(self):
+        with pytest.raises(StopIteration):
+            serialized = bytearray([0x09, 0x08])
+            target = PayloadSequenceExample()
+            target.deserialize(iter(serialized))
+
+    def test_payload_sequence_skips_optional(self):
+        serialized = bytearray([0x09, 0x08])
+        target = PayloadSequenceOptionalExample()
+        target.deserialize(iter(serialized))
+        self.assertEqual(target.first_byte.get_value(), 0x09)
+        self.assertEqual(target.second_byte.get_value(), 0x08)
+        self.assertEqual(target.third_word.is_skipped(), True)
 
 
 if __name__ == '__main__':
