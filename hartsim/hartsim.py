@@ -1,13 +1,22 @@
 from dataclasses import dataclass
 import serial
 import time
+
+from .config import Configuration
 from .framingutils import FrameType, HartFrame
 from .payloads import U8
 from .commands import Cmd0Reply, Cmd1Reply, Cmd20Reply, ErrorReply, long_address, short_address, is_burst_mode
 
-port = serial.Serial('COM3', baudrate=1200,
-                     parity=serial.PARITY_ODD, bytesize=8, stopbits=1)
+config = Configuration()
+
+port = serial.Serial(config.port,
+                     baudrate=1200,
+                     parity=serial.PARITY_ODD,
+                     bytesize=8,
+                     stopbits=1)
+
 port.flush()
+port.read_all()
 
 
 while True:
