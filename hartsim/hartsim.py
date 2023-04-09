@@ -1,11 +1,11 @@
-from dataclasses import dataclass
 import serial
 import time
 
 from .config import Configuration
 from .framingutils import FrameType, HartFrame
 from .payloads import U8
-from .commands import Cmd0Reply, Cmd1Reply, Cmd20Reply, ErrorReply, long_address, short_address, is_burst_mode
+from .commands import Cmd0Reply, Cmd1Reply, Cmd20Reply, ErrorReply, long_address,\
+    short_address, is_burst_mode
 
 config = Configuration()
 
@@ -24,7 +24,11 @@ while True:
         data = port.read_all()
         request = HartFrame.deserialize(iter(data))
         print(f'<= {request}')
-        if request.is_long_address and request.long_address == long_address or not request.is_long_address and request.short_address == short_address:
+        long_address_matched = request.is_long_address\
+            and request.long_address == long_address
+        short_address_matched = not request.is_long_address\
+            and request.short_address == short_address
+        if long_address_matched or short_address_matched:
             match request.command_number:
                 case 0:
                     payload = Cmd0Reply()

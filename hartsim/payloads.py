@@ -1,5 +1,4 @@
 from abc import abstractmethod
-import binascii
 from functools import reduce
 from itertools import repeat
 from math import ceil, floor
@@ -37,7 +36,13 @@ class Unsigned(Payload):
     def __init__(self,
                  value: int = 0,
                  size: int = MIN_SIZE):
-        self.__size = MIN_SIZE if size < MIN_SIZE else MAX_INTEGER_SIZE if size > MAX_INTEGER_SIZE else size
+        self.__size = MIN_SIZE\
+            if size < MIN_SIZE\
+            else\
+            MAX_INTEGER_SIZE\
+            if size > MAX_INTEGER_SIZE\
+            else\
+            size
         self.__mask = reduce(lambda x, y: x << 8 | y,
                              repeat(FULL_BYTE_MASK, self.__size))
         self.set_value(value)
@@ -188,8 +193,16 @@ class PackedAscii(Payload):
             newValue = value[:self.__size]
         else:
             newValue = value
-        newValue = str("".join(map(lambda x: chr(ord(x) - 0x20) if x >= "a" and x <=
-                       "z" else PACKED_ASCII_FALLBACK if x < " " or x > "_" else x, newValue)))
+        newValue = str("".join(
+            map(
+                lambda x: chr(ord(x) - 0x20)
+                if x >= "a" and x <= "z"
+                else
+                PACKED_ASCII_FALLBACK
+                if x < " " or x > "_"
+                else
+                x,
+                newValue)))
         self.__value = newValue
 
     def __next__(self):

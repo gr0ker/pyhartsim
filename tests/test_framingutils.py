@@ -1,7 +1,5 @@
 import unittest
 
-from attr import dataclass
-
 from hartsim import HartFrame, FrameType
 
 
@@ -16,7 +14,11 @@ class TestFramingUtils(unittest.TestCase):
     def test_hart_frame_long_address_to_bytes(self):
         expected = bytearray(
             [0x86, 0x92, 0x34, 0x56, 0x78, 0x9A, 0x00, 0x03, 0x01, 0x02, 0x03, 0x97])
-        target = HartFrame(FrameType.ACK, 0, is_long_address=True, long_address=bytearray([0x12, 0x34, 0x56, 0x78, 0x9A]),
+        target = HartFrame(FrameType.ACK,
+                           0,
+                           is_long_address=True,
+                           long_address=bytearray(
+                               [0x12, 0x34, 0x56, 0x78, 0x9A]),
                            data=bytearray([0x01, 0x02, 0x03]))
         self.assertEqual(target.to_bytes(), expected)
 
@@ -35,7 +37,8 @@ class TestFramingUtils(unittest.TestCase):
 
     def test_hart_frame_long_address_deserialize(self):
         serialized = iter(
-            bytearray([0xFF, 0xFF, 0x86, 0x92, 0x34, 0x56, 0x78, 0x9A, 0x00, 0x03, 0x01, 0x02, 0x03, 0x97]))
+            bytearray([0xFF, 0xFF, 0x86, 0x92, 0x34, 0x56, 0x78,
+                       0x9A, 0x00, 0x03, 0x01, 0x02, 0x03, 0x97]))
         target = HartFrame.deserialize(serialized)
         self.assertEqual(target.type, FrameType.ACK)
         self.assertEqual(target.is_long_address, True)

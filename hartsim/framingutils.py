@@ -148,7 +148,10 @@ class HartFrame:
 
         # delimiter
         encoded.append(
-            self.type.value | LONG_ADDRESS_MASK if self.is_long_address else self.type.value)
+            self.type.value | LONG_ADDRESS_MASK
+            if self.is_long_address
+            else
+            self.type.value)
 
         # address
         if self.is_long_address:
@@ -183,10 +186,26 @@ class HartFrame:
         return encoded
 
     def __repr__(self):
+        master = "PRI"\
+            if self.is_primary_master\
+            else\
+                 "SEC"
+        burst = " BST"\
+            if self.is_burst\
+            else\
+                ""
+        address = "".join("{:02X}".format(x) for x in self.long_address)\
+            if self.is_long_address\
+            else\
+                  self.short_address
+        data = "".join("{:02X}".format(x) for x in self.data)\
+            if len(self.data)\
+            else\
+            "NO"
         return f'{self.type} \
-{"PRI" if self.is_primary_master else "SEC"}\
-{" BST" if self.is_burst else ""} \
-ADR({"".join("{:02X}".format(x) for x in self.long_address) if self.is_long_address else self.short_address}) \
+{master}\
+{burst} \
+ADR({address}) \
 CMD({self.command_number:03}) \
-DAT({"".join("{:02X}".format(x) for x in self.data) if len(self.data) else "NO"}) \
+DAT({data}) \
 SUM({self.check_sum:02X})'
