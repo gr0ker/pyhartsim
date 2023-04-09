@@ -4,6 +4,7 @@
         "bytesize",
         "framingutils",
         "hartsim",
+        "pytest",
         "stopbits"
     ]
 }
