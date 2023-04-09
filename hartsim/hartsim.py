@@ -3,10 +3,7 @@ import time
 
 from .config import Configuration
 from .framingutils import FrameType, HartFrame
-from .payloads import U8
-from .commands import Cmd0Reply, Cmd12Reply, Cmd1Reply, Cmd20Reply, Cmd2Reply,\
-    Cmd3Reply, Cmd7Reply, Cmd8Reply, ErrorReply, long_address, polling_address,\
-    is_burst_mode
+from .commands import handle_request, long_address, polling_address, is_burst_mode
 
 config = Configuration()
 
@@ -30,24 +27,7 @@ while True:
         short_address_matched = not request.is_long_address\
             and request.short_address == polling_address.get_value()
         if long_address_matched or short_address_matched:
-            if request.command_number == 0:
-                payload = Cmd0Reply()
-            elif request.command_number == 1:
-                payload = Cmd1Reply()
-            elif request.command_number == 2:
-                payload = Cmd2Reply()
-            elif request.command_number == 3:
-                payload = Cmd3Reply()
-            elif request.command_number == 7:
-                payload = Cmd7Reply()
-            elif request.command_number == 8:
-                payload = Cmd8Reply()
-            elif request.command_number == 12:
-                payload = Cmd12Reply()
-            elif request.command_number == 20:
-                payload = Cmd20Reply()
-            else:
-                payload = ErrorReply(response_code=U8(64))
+            payload = handle_request(request.command_number, request.data)
             reply = HartFrame(FrameType.ACK,
                               request.command_number,
                               request.is_long_address,
@@ -55,7 +35,7 @@ while True:
                               long_address,
                               request.is_primary_master,
                               is_burst_mode,
-                              list(payload))
+                              payload)
             reply_data = bytearray([0xFF, 0xFF, 0xFF])
             reply_data.extend(reply.to_bytes())
             port.write(reply_data)

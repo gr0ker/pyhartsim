@@ -37,6 +37,29 @@ message = PackedAscii(32, "THIS IS A MESSAGE")
 long_tag = Ascii(32, "This is a HART device simulator")
 
 
+def handle_request(command_number: int, data: bytearray) -> bytearray:
+    if command_number == 0:
+        payload = Cmd0Reply()
+    elif command_number == 1:
+        payload = Cmd1Reply()
+    elif command_number == 2:
+        payload = Cmd2Reply()
+    elif command_number == 3:
+        payload = Cmd3Reply()
+    elif command_number == 7:
+        payload = Cmd7Reply()
+    elif command_number == 8:
+        payload = Cmd8Reply()
+    elif command_number == 12:
+        payload = Cmd12Reply()
+    elif command_number == 20:
+        payload = Cmd20Reply()
+    else:
+        payload = ErrorReply(response_code=U8(64))
+
+    return list(payload)
+
+
 @dataclass
 class Cmd0Reply (PayloadSequence):
     response_code: U8 = U8()
