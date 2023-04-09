@@ -1,6 +1,8 @@
 from abc import abstractmethod
+import binascii
 from functools import reduce
 from itertools import repeat
+from math import ceil, floor
 import struct
 from typing import Iterator
 
@@ -8,10 +10,13 @@ from attr import dataclass
 
 FULL_BYTE_MASK = 0xFF
 U16_MASK = 0xFFFF
-MIN_INTEGER_SIZE = 1
+MIN_SIZE = 1
 MAX_INTEGER_SIZE = 4
 BITS_IN_BYTE = 8
 FLOAT_SIZE = 4
+PACKED_ASCII_FALLBACK = "?"
+PACKED_ASCII_FILLER = " "
+PACKED_ASCII_MASK = 0x3F
 
 
 class Payload:
@@ -31,8 +36,8 @@ class Payload:
 class Unsigned(Payload):
     def __init__(self,
                  value: int = 0,
-                 size: int = MIN_INTEGER_SIZE):
-        self.__size = MIN_INTEGER_SIZE if size < MIN_INTEGER_SIZE else MAX_INTEGER_SIZE if size > MAX_INTEGER_SIZE else size
+                 size: int = MIN_SIZE):
+        self.__size = MIN_SIZE if size < MIN_SIZE else MAX_INTEGER_SIZE if size > MAX_INTEGER_SIZE else size
         self.__mask = reduce(lambda x, y: x << 8 | y,
                              repeat(FULL_BYTE_MASK, self.__size))
         self.set_value(value)
@@ -127,7 +132,7 @@ class Ascii(Payload):
     def __init__(self,
                  size: int,
                  value: str = "",):
-        self.__size = MIN_INTEGER_SIZE if size < MIN_INTEGER_SIZE else size
+        self.__size = MIN_SIZE if size < MIN_SIZE else size
         self.set_value(value)
 
     def get_size(self):
@@ -159,6 +164,88 @@ class Ascii(Payload):
         for _ in range(0, self.__size):
             value += chr(next(iterator))
         self.set_value(value)
+
+
+class PackedAscii(Payload):
+    def __init__(self,
+                 size: int,
+                 value: str = "",):
+        self.__size = MIN_SIZE if size < MIN_SIZE else size
+        self.__packed_size = int(ceil(self.__size * 3 / 4))
+        self.set_value(value)
+
+    def get_size(self):
+        return self.__size
+
+    def get_packed_size(self):
+        return self.__packed_size
+
+    def get_value(self) -> str:
+        return self.__value
+
+    def set_value(self, value: str):
+        if (len(value) > self.__size):
+            newValue = value[:self.__size]
+        else:
+            newValue = value
+        newValue = str("".join(map(lambda x: chr(ord(x) - 0x20) if x >= "a" and x <=
+                       "z" else PACKED_ASCII_FALLBACK if x < " " or x > "_" else x, newValue)))
+        self.__value = newValue
+
+    def __next__(self):
+        if self._offset < self.__packed_size:
+            left_index = floor(self._offset * 4 / 3)
+            left_shift = (self._offset % 3 + 1) * 2
+            right_index = left_index + 1
+            right_shift = 6 - left_shift
+
+            if left_index < self.__size:
+                if left_index < len(self.__value):
+                    value = self.__value[left_index]
+                else:
+                    value = PACKED_ASCII_FILLER
+                left = ((ord(value) & PACKED_ASCII_MASK)
+                        << left_shift) & FULL_BYTE_MASK
+            else:
+                left = 0
+
+            if right_index < self.__size:
+                if right_index < len(self.__value):
+                    value = self.__value[right_index]
+                else:
+                    value = PACKED_ASCII_FILLER
+                right = ((ord(value) & PACKED_ASCII_MASK)
+                         >> right_shift) & FULL_BYTE_MASK
+            else:
+                right = 0
+
+            next = left | right
+            self._offset += 1
+            return next
+        else:
+            raise StopIteration
+
+    def deserialize(self, iterator: Iterator[int]):
+        value = bytearray(self.__size)
+        for i in range(0, self.__packed_size):
+            item = next(iterator)
+
+            left_index = floor(i * 4 / 3)
+            left_shift = (i % 3 + 1) * 2
+
+            if left_index < self.__size:
+                value[left_index] |= (item >> left_shift) & PACKED_ASCII_MASK
+
+            right_index = left_index + 1
+            right_shift = 6 - left_shift
+
+            if right_index < self.__size:
+                value[right_index] |= (item << right_shift) & PACKED_ASCII_MASK
+
+        value = bytearray(
+            [item + 0x40 if item < 0x20 else item for item in value])
+
+        self.set_value(str(value, "ascii"))
 
 
 @dataclass

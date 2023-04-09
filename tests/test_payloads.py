@@ -4,7 +4,7 @@ import unittest
 from attr import dataclass
 
 from hartsim import Unsigned, U8, U16, U24, U32, PayloadSequence
-from hartsim.payloads import F32, Ascii
+from hartsim.payloads import F32, Ascii, PackedAscii
 
 
 @dataclass
@@ -361,6 +361,214 @@ class TestPayloads(unittest.TestCase):
         self.assertEqual(target.first_byte.get_value(), 0x09)
         self.assertEqual(target.second_byte.get_value(), 0x08)
         self.assertEqual(target.third_word.get_value(), 0x0706)
+
+    def test_packed_ascii_value_handling(self):
+        size = 32
+        value = "`This~is a {test}.`"
+        expected = "?THIS?IS A ?TEST?.?"
+        target = PackedAscii(size, value)
+        self.assertEqual(target.get_value(), expected)
+
+    def test_packed_ascii_packed_size_1(self):
+        size = 1
+        expected = 1
+        target = PackedAscii(size)
+        self.assertEqual(target.get_packed_size(), expected)
+
+    def test_packed_ascii_size_2(self):
+        size = 2
+        expected = 2
+        target = PackedAscii(size)
+        self.assertEqual(target.get_packed_size(), expected)
+
+    def test_packed_ascii_size_3(self):
+        size = 3
+        expected = 3
+        target = PackedAscii(size)
+        self.assertEqual(target.get_packed_size(), expected)
+
+    def test_packed_ascii_size_4(self):
+        size = 4
+        expected = 3
+        target = PackedAscii(size)
+        self.assertEqual(target.get_packed_size(), expected)
+
+    def test_packed_ascii_packed_size_5(self):
+        size = 5
+        expected = 4
+        target = PackedAscii(size)
+        self.assertEqual(target.get_packed_size(), expected)
+
+    def test_packed_ascii_size_6(self):
+        size = 6
+        expected = 5
+        target = PackedAscii(size)
+        self.assertEqual(target.get_packed_size(), expected)
+
+    def test_packed_ascii_size_7(self):
+        size = 7
+        expected = 6
+        target = PackedAscii(size)
+        self.assertEqual(target.get_packed_size(), expected)
+
+    def test_packed_ascii_size_8(self):
+        size = 8
+        expected = 6
+        target = PackedAscii(size)
+        self.assertEqual(target.get_packed_size(), expected)
+
+    def test_packed_ascii_serialize_1(self):
+        size = 1
+        value = "1"
+        expected = bytearray([0xC4])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_2(self):
+        size = 2
+        value = "12"
+        expected = bytearray([0xC7, 0x20])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_3(self):
+        size = 3
+        value = "123"
+        expected = bytearray([0xC7, 0x2C, 0xC0])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_4(self):
+        size = 4
+        value = "1234"
+        expected = bytearray([0xC7, 0x2C, 0xF4])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_5(self):
+        size = 5
+        value = "12345"
+        expected = bytearray([0xC7, 0x2C, 0xF4, 0xD4])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_6(self):
+        size = 6
+        value = "123456"
+        expected = bytearray([0xC7, 0x2C, 0xF4, 0xD7, 0x60])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_7(self):
+        size = 7
+        value = "1234567"
+        expected = bytearray([0xC7, 0x2C, 0xF4, 0xD7, 0x6D, 0xC0])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_8(self):
+        size = 8
+        value = "12345678"
+        expected = bytearray([0xC7, 0x2C, 0xF4, 0xD7, 0x6D, 0xF8])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_8_1(self):
+        size = 8
+        value = "1"
+        expected = bytearray([0xC6, 0x08, 0x20, 0x82, 0x08, 0x20])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_8_2(self):
+        size = 8
+        value = "12"
+        expected = bytearray([0xC7, 0x28, 0x20, 0x82, 0x08, 0x20])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_8_3(self):
+        size = 8
+        value = "123"
+        expected = bytearray([0xC7, 0x2C, 0xE0, 0x82, 0x08, 0x20])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_packed_ascii_serialize_8_4(self):
+        size = 8
+        value = "1234"
+        expected = bytearray([0xC7, 0x2C, 0xF4, 0x82, 0x08, 0x20])
+        expectedIndex = 0
+        target = PackedAscii(size, value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
+
+    def test_ascii_deserialize_digits(self):
+        size = 8
+        serialized = bytearray([0x01, 0xC7, 0x2C, 0xF4, 0xD7, 0x6D, 0xF8])
+        expected = "12345678"
+        target = PackedAscii(size)
+        serialized_iterator = iter(serialized)
+        next(serialized_iterator)
+        target.deserialize(serialized_iterator)
+        self.assertEqual(target.get_value(), expected)
+
+    def test_ascii_deserialize_alpha(self):
+        size = 8
+        serialized = bytearray(
+            [0x00, 0x05, 0x30, 0xC9, 0x26, 0xDD, 0xA0, 0x00])
+        expected = "ASCII-6 "
+        target = PackedAscii(size)
+        serialized_iterator = iter(serialized)
+        next(serialized_iterator)
+        target.deserialize(serialized_iterator)
+        self.assertEqual(target.get_value(), expected)
 
 
 if __name__ == '__main__':
