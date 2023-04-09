@@ -49,66 +49,65 @@ class HartFrame:
         check_sum = None
         number_of_preambles = 0
         for item in iterator:
-            match state:
-                case State.UNKNOWN:
-                    if item == 0xFF:
-                        number_of_preambles += 1
-                    else:
-                        number_of_preambles = 0
+            if state == State.UNKNOWN:
+                if item == 0xFF:
+                    number_of_preambles += 1
+                else:
+                    number_of_preambles = 0
 
-                    if number_of_preambles >= 2:
-                        state = State.PREAMBLES
-                case State.PREAMBLES:
-                    if item != 0xFF:
-                        maskedItem = item & DELIMITER_MASK
-                        if FrameType.has_value(maskedItem):
-                            type = FrameType(maskedItem)
-                            is_long_address = (
-                                item & LONG_ADDRESS_MASK) == LONG_ADDRESS_MASK
-                            if is_long_address:
-                                state = State.LONG_ADDRESS
-                            else:
-                                state = State.SHORT_ADDRESS
-                            long_address = bytearray()
-                            short_address = 0
+                if number_of_preambles >= 2:
+                    state = State.PREAMBLES
+            elif state == State.PREAMBLES:
+                if item != 0xFF:
+                    maskedItem = item & DELIMITER_MASK
+                    if FrameType.has_value(maskedItem):
+                        type = FrameType(maskedItem)
+                        is_long_address = (
+                            item & LONG_ADDRESS_MASK) == LONG_ADDRESS_MASK
+                        if is_long_address:
+                            state = State.LONG_ADDRESS
                         else:
-                            state = State.UNKNOWN
-                case State.SHORT_ADDRESS:
-                    short_address = item & ADDRESS_MASK
+                            state = State.SHORT_ADDRESS
+                        long_address = bytearray()
+                        short_address = 0
+                    else:
+                        state = State.UNKNOWN
+            elif state == State.SHORT_ADDRESS:
+                short_address = item & ADDRESS_MASK
+                is_primary_master = (
+                    item & PRIMARY_MASTER_MASK) == PRIMARY_MASTER_MASK
+                is_burst = (
+                    item & BURST_MODE_MASK) == BURST_MODE_MASK
+                state = State.COMMAND_NUMBER
+            elif state == State.LONG_ADDRESS:
+                if len(long_address) == 0:
+                    long_address.append(item & ADDRESS_MASK)
                     is_primary_master = (
                         item & PRIMARY_MASTER_MASK) == PRIMARY_MASTER_MASK
                     is_burst = (
                         item & BURST_MODE_MASK) == BURST_MODE_MASK
+                else:
+                    long_address.append(item)
+                if len(long_address) == 5:
                     state = State.COMMAND_NUMBER
-                case State.LONG_ADDRESS:
-                    if len(long_address) == 0:
-                        long_address.append(item & ADDRESS_MASK)
-                        is_primary_master = (
-                            item & PRIMARY_MASTER_MASK) == PRIMARY_MASTER_MASK
-                        is_burst = (
-                            item & BURST_MODE_MASK) == BURST_MODE_MASK
-                    else:
-                        long_address.append(item)
-                    if len(long_address) == 5:
-                        state = State.COMMAND_NUMBER
-                case State.COMMAND_NUMBER:
-                    command_number = item
-                    state = State.BYTE_COUNT
-                case State.BYTE_COUNT:
-                    byte_count = item
-                    if byte_count > 0:
-                        state = State.DATA
-                    else:
-                        state = State.CHECK_SUM
-                    payload = bytearray()
-                case State.DATA:
-                    payload.append(item)
-                    if len(payload) == byte_count:
-                        state = State.CHECK_SUM
-                case State.CHECK_SUM:
-                    check_sum = item
-                    state = State.COMPLETE
-                    break
+            elif state == State.COMMAND_NUMBER:
+                command_number = item
+                state = State.BYTE_COUNT
+            elif state == State.BYTE_COUNT:
+                byte_count = item
+                if byte_count > 0:
+                    state = State.DATA
+                else:
+                    state = State.CHECK_SUM
+                payload = bytearray()
+            elif state == State.DATA:
+                payload.append(item)
+                if len(payload) == byte_count:
+                    state = State.CHECK_SUM
+            elif state == State.CHECK_SUM:
+                check_sum = item
+                state = State.COMPLETE
+                break
 
         return HartFrame(type,
                          command_number,

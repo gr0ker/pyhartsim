@@ -29,15 +29,14 @@ while True:
         short_address_matched = not request.is_long_address\
             and request.short_address == short_address
         if long_address_matched or short_address_matched:
-            match request.command_number:
-                case 0:
-                    payload = Cmd0Reply()
-                case 1:
-                    payload = Cmd1Reply()
-                case 20:
-                    payload = Cmd20Reply()
-                case _:
-                    payload = ErrorReply(response_code=U8(64))
+            if request.command_number == 0:
+                payload = Cmd0Reply()
+            elif request.command_number == 1:
+                payload = Cmd1Reply()
+            elif request.command_number == 20:
+                payload = Cmd20Reply()
+            else:
+                payload = ErrorReply(response_code=U8(64))
             reply = HartFrame(FrameType.ACK,
                               request.command_number,
                               request.is_long_address,
