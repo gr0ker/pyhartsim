@@ -15,6 +15,7 @@ port = serial.Serial(config.port,
 
 port.flush()
 port.read_all()
+port.dtr = False
 
 
 while True:
@@ -38,7 +39,9 @@ while True:
                               payload)
             reply_data = bytearray([0xFF, 0xFF, 0xFF])
             reply_data.extend(reply.to_bytes())
+            port.dtr = True
             port.write(reply_data)
+            port.dtr = False
             print(f'=> {reply}')
         else:
             print('=> None')
