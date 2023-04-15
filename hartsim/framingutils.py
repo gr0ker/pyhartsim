@@ -10,8 +10,7 @@ State = Enum('State', [
     'COMMAND_NUMBER',
     'BYTE_COUNT',
     'DATA',
-    'CHECK_SUM',
-    'COMPLETE'])
+    'CHECK_SUM'])
 
 
 class FrameType(Enum):
@@ -32,105 +31,25 @@ LONG_ADDRESS_MASK = 0x80
 PRIMARY_MASTER_MASK = 0x80
 BURST_MODE_MASK = 0x40
 ADDRESS_MASK = 0x3F
+__UNDEFINED_NAME__ = '???'
+__PRIMARY_NAME__ = 'PRI'
+__SECONDARY_NAME__ = 'SEC'
+__BURST_NAME__ = 'BST'
+__POLLING_NAME__ = 'POL'
+__NONE_NAME__ = 'NONE'
 
 
 class HartFrame:
-    @classmethod
-    def deserialize(self, iterator: Iterator[int]):
-        state = State.UNKNOWN
-        type = None
-        command_number = None
-        is_long_address = None
-        short_address = None
-        long_address = None
-        is_primary_master = None
-        is_burst = None
-        payload = None
-        check_sum = None
-        number_of_preambles = 0
-        for item in iterator:
-            if state == State.UNKNOWN:
-                if item == 0xFF:
-                    number_of_preambles += 1
-                else:
-                    number_of_preambles = 0
-
-                if number_of_preambles >= 2:
-                    state = State.PREAMBLES
-            elif state == State.PREAMBLES:
-                if item != 0xFF:
-                    maskedItem = item & DELIMITER_MASK
-                    if FrameType.has_value(maskedItem):
-                        type = FrameType(maskedItem)
-                        is_long_address = (
-                            item & LONG_ADDRESS_MASK) == LONG_ADDRESS_MASK
-                        if is_long_address:
-                            state = State.LONG_ADDRESS
-                        else:
-                            state = State.SHORT_ADDRESS
-                        long_address = bytearray()
-                        short_address = 0
-                    else:
-                        state = State.UNKNOWN
-            elif state == State.SHORT_ADDRESS:
-                short_address = item & ADDRESS_MASK
-                is_primary_master = (
-                    item & PRIMARY_MASTER_MASK) == PRIMARY_MASTER_MASK
-                is_burst = (
-                    item & BURST_MODE_MASK) == BURST_MODE_MASK
-                state = State.COMMAND_NUMBER
-            elif state == State.LONG_ADDRESS:
-                if len(long_address) == 0:
-                    long_address.append(item & ADDRESS_MASK)
-                    is_primary_master = (
-                        item & PRIMARY_MASTER_MASK) == PRIMARY_MASTER_MASK
-                    is_burst = (
-                        item & BURST_MODE_MASK) == BURST_MODE_MASK
-                else:
-                    long_address.append(item)
-                if len(long_address) == 5:
-                    state = State.COMMAND_NUMBER
-            elif state == State.COMMAND_NUMBER:
-                command_number = item
-                state = State.BYTE_COUNT
-            elif state == State.BYTE_COUNT:
-                byte_count = item
-                if byte_count > 0:
-                    state = State.DATA
-                else:
-                    state = State.CHECK_SUM
-                payload = bytearray()
-            elif state == State.DATA:
-                payload.append(item)
-                if len(payload) == byte_count:
-                    state = State.CHECK_SUM
-            elif state == State.CHECK_SUM:
-                check_sum = item
-                state = State.COMPLETE
-                break
-
-        return HartFrame(type,
-                         command_number,
-                         is_long_address,
-                         short_address,
-                         long_address,
-                         is_primary_master,
-                         is_burst,
-                         payload,
-                         check_sum,
-                         state)
-
     def __init__(self,
                  type: FrameType,
                  command_number: int,
                  is_long_address: bool = False,
                  short_address: int = 0,
-                 long_address: bytearray = bytearray(),
+                 long_address: bytearray = None,
                  is_primary_master: bool = True,
                  is_burst: bool = False,
                  data: bytearray = bytearray(),
-                 check_sum: int = 0x00,
-                 state: State = State.COMPLETE):
+                 check_sum: int = None):
         self.type = type
         self.command_number = command_number
         self.is_long_address = is_long_address
@@ -140,9 +59,8 @@ class HartFrame:
         self.is_burst = is_burst
         self.data = data
         self.check_sum = check_sum
-        self.state = state
 
-    def to_bytes(self):
+    def serialize(self, update_check_sum: bool = True):
         encoded = bytearray()
 
         # delimiter
@@ -179,32 +97,174 @@ class HartFrame:
         encoded.extend(self.data)
 
         # check byte
-        self.check_sum = reduce(lambda x, y: x ^ y, encoded)
-        encoded.append(self.check_sum)
+        check_sum = reduce(lambda x, y: x ^ y, encoded)
+
+        if update_check_sum:
+            self.check_sum = check_sum
+
+        encoded.append(check_sum)
 
         return encoded
 
+    def is_valid(self) -> bool:
+        return self.serialize()[-1] == self.check_sum
+
     def __repr__(self):
-        master = "PRI"\
-            if self.is_primary_master\
-            else\
-                 "SEC"
-        burst = " BST"\
-            if self.is_burst\
-            else\
-                ""
-        address = "".join("{:02X}".format(x) for x in self.long_address)\
-            if self.is_long_address\
-            else\
-                  self.short_address
-        data = "".join("{:02X}".format(x) for x in self.data)\
-            if len(self.data)\
-            else\
-            "NO"
-        return f'{self.type} \
-{master}\
-{burst} \
+        try:
+            kind = f'{self.type}'
+        except TypeError:
+            kind = __UNDEFINED_NAME__
+
+        try:
+            if self.is_primary_master:
+                master = __PRIMARY_NAME__
+            else:
+                master = __SECONDARY_NAME__
+        except TypeError:
+            master = __UNDEFINED_NAME__
+
+        try:
+            if self.is_burst:
+                burst = __BURST_NAME__
+            else:
+                burst = __POLLING_NAME__
+        except TypeError:
+            burst = __UNDEFINED_NAME__
+
+        try:
+            if self.is_long_address:
+                address = '0x' + ''.join('{:02X}'.format(x)
+                                         for x in self.long_address)
+            else:
+                address = self.short_address
+        except TypeError:
+            address = __UNDEFINED_NAME__
+
+        try:
+            command_number = f'{self.command_number:05}'
+        except TypeError:
+            command_number = __UNDEFINED_NAME__
+
+        try:
+            if self.is_valid():
+                check_sum = f'0x{self.check_sum:02X} '
+            else:
+                check_sum = f'0x{self.check_sum:02X}!'
+        except TypeError:
+            check_sum = __UNDEFINED_NAME__
+
+        try:
+            if len(self.data) > 0:
+                data = '0x' + ''.join('{:02X}'.format(x) for x in self.data)
+            else:
+                data = __NONE_NAME__
+        except TypeError:
+            data = __UNDEFINED_NAME__
+
+        return f'\
+TYP({kind}) \
+MST({master}) \
+MOD({burst}) \
 ADR({address}) \
-CMD({self.command_number:03}) \
-DAT({data}) \
-SUM({self.check_sum:02X})'
+CMD({command_number}) \
+SUM({check_sum}) \
+DAT({data})'
+
+
+class HartFrameBuilder:
+    def __init__(self):
+        self.__queue = []
+        self.__reset__()
+
+    def __reset__(self):
+        self.state = State.UNKNOWN
+        self.type = None
+        self.command_number = None
+        self.is_long_address = None
+        self.short_address = None
+        self.long_address = None
+        self.is_primary_master = None
+        self.is_burst = None
+        self.payload = None
+        self.check_sum = None
+        self.number_of_preambles = 0
+
+    def collect(self, iterator: Iterator[int]) -> bool:
+        isNewFrameAvailable = False
+
+        for item in iterator:
+            if self.state == State.UNKNOWN:
+                if item == 0xFF:
+                    self.number_of_preambles += 1
+                else:
+                    self.number_of_preambles = 0
+
+                if self.number_of_preambles >= 2:
+                    self.state = State.PREAMBLES
+            elif self.state == State.PREAMBLES:
+                if item != 0xFF:
+                    maskedItem = item & DELIMITER_MASK
+                    if FrameType.has_value(maskedItem):
+                        self.type = FrameType(maskedItem)
+                        self.is_long_address = (
+                            item & LONG_ADDRESS_MASK) == LONG_ADDRESS_MASK
+                        if self.is_long_address:
+                            self.state = State.LONG_ADDRESS
+                        else:
+                            self.state = State.SHORT_ADDRESS
+                        self.long_address = bytearray()
+                        self.short_address = 0
+                    else:
+                        self.state = State.UNKNOWN
+            elif self.state == State.SHORT_ADDRESS:
+                self.short_address = item & ADDRESS_MASK
+                self.is_primary_master = (
+                    item & PRIMARY_MASTER_MASK) == PRIMARY_MASTER_MASK
+                self.is_burst = (
+                    item & BURST_MODE_MASK) == BURST_MODE_MASK
+                self.state = State.COMMAND_NUMBER
+            elif self.state == State.LONG_ADDRESS:
+                if len(self.long_address) == 0:
+                    self.long_address.append(item & ADDRESS_MASK)
+                    self.is_primary_master = (
+                        item & PRIMARY_MASTER_MASK) == PRIMARY_MASTER_MASK
+                    self.is_burst = (
+                        item & BURST_MODE_MASK) == BURST_MODE_MASK
+                else:
+                    self.long_address.append(item)
+                if len(self.long_address) == 5:
+                    self.state = State.COMMAND_NUMBER
+            elif self.state == State.COMMAND_NUMBER:
+                self.command_number = item
+                self.state = State.BYTE_COUNT
+            elif self.state == State.BYTE_COUNT:
+                self.byte_count = item
+                if self.byte_count > 0:
+                    self.state = State.DATA
+                else:
+                    self.state = State.CHECK_SUM
+                self.payload = bytearray()
+            elif self.state == State.DATA:
+                self.payload.append(item)
+                if len(self.payload) == self.byte_count:
+                    self.state = State.CHECK_SUM
+            elif self.state == State.CHECK_SUM:
+                self.check_sum = item
+                newFrame = HartFrame(self.type,
+                                     self.command_number,
+                                     self.is_long_address,
+                                     self.short_address,
+                                     self.long_address,
+                                     self.is_primary_master,
+                                     self.is_burst,
+                                     self.payload,
+                                     self.check_sum)
+                self.__queue.append(newFrame)
+                isNewFrameAvailable = True
+                self.__reset__()
+                break
+
+        return isNewFrameAvailable
+
+    def dequeue(self) -> HartFrame:
+        return self.__queue.pop(0)
