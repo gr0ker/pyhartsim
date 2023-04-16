@@ -62,7 +62,8 @@ class TestFramingUtils(unittest.TestCase):
 
     def test_hart_frame_constructor_format(self):
         expected =\
-            'TYP(STX) MST(SEC) MOD(BST) ADR(0x123456789A) CMD(00234) SUM(0xB9 ) DAT(0x010203)'
+            'TYP(STX) MST(SEC) MOD(BST) ADR(0x123456789A) CMD(00234) SUM(0xB9 ) \
+DAT(0x010203)'
         target = HartFrame(FrameType.STX,
                            234,
                            is_long_address=True,
