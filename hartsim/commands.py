@@ -123,6 +123,8 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
             payload.device_variable_status_8.include()
     elif command_number == 12:
         payload = Cmd12Reply.create(device)
+    elif command_number == 13:
+        payload = Cmd13Reply.create(device)
     elif command_number == 20:
         payload = Cmd20Reply.create(device)
     else:
@@ -325,13 +327,34 @@ class Cmd9Reply (PayloadSequence):
 class Cmd12Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    message: PackedAscii = PackedAscii(32)
+    hart_message: PackedAscii = PackedAscii(32)
 
     @classmethod
     def create(cls, device: HartDevice):
         return Cmd12Reply(
             device_status=device.device_status,
-            message=device.message)
+            hart_message=device.hart_message)
+
+
+@dataclass
+class Cmd13Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    hart_tag: PackedAscii = PackedAscii(8)
+    hart_descriptor: PackedAscii = PackedAscii(16)
+    hart_date: U24 = U24()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        print(device.hart_date)
+        print(U24(0x010100))
+        print(device.hart_descriptor)
+        print(PackedAscii(16, "????????????????"))
+        return cls(
+            device_status=device.device_status,
+            hart_tag=device.hart_tag,
+            hart_descriptor=device.hart_descriptor,
+            hart_date=device.hart_date)
 
 
 @dataclass
@@ -344,7 +367,7 @@ class Cmd20Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return Cmd20Reply(
             device_status=device.device_status,
-            long_tag=device.long_tag)
+            long_tag=device.hart_long_tag)
 
 
 @dataclass

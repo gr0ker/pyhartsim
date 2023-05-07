@@ -5,7 +5,7 @@ from .config import Configuration
 from .framingutils import FrameType, HartFrame, HartFrameBuilder
 from .commands import handle_request
 from .devices import HartDevice
-from .payloads import U8, U16, U24, Ascii
+from .payloads import U8, U16, U24, Ascii, PackedAscii
 
 config = Configuration()
 
@@ -26,14 +26,16 @@ device3051 = HartDevice(
     long_address=0x7FFFFFFFFF & 0x2606123456,
     expanded_device_type=U16(0x2606),
     device_id=U24(0x123456),
-    long_tag=Ascii(32, "This is 3051 rev 10             "))
+    hart_tag=PackedAscii(8, "3051 r10"),
+    hart_long_tag=Ascii(32, "This is 3051 rev 10             "))
 
 device150 = HartDevice(
     polling_address=U8(1),
     long_address=0x7FFFFFFFFF & 0x9979789ABC,
     expanded_device_type=U16(0x9979),
     device_id=U24(0x789ABC),
-    long_tag=Ascii(32, "This is 150 rev 10              "))
+    hart_tag=PackedAscii(8, "150 r10 "),
+    hart_long_tag=Ascii(32, "This is 150 rev 10              "))
 
 poll_map = {
     device3051.polling_address.get_value(): device3051,
