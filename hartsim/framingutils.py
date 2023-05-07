@@ -45,7 +45,7 @@ class HartFrame:
                  command_number: int,
                  is_long_address: bool = False,
                  short_address: int = 0,
-                 long_address: bytearray = None,
+                 long_address: int = 0,
                  is_primary_master: bool = True,
                  is_burst: bool = False,
                  data: bytearray = bytearray(),
@@ -72,13 +72,16 @@ class HartFrame:
 
         # address
         if self.is_long_address:
-            first_byte = self.long_address[0]
+            first_byte = self.long_address >> 32
             if self.is_primary_master:
                 first_byte |= PRIMARY_MASTER_MASK
             if self.is_burst:
                 first_byte |= BURST_MODE_MASK
             encoded.append(first_byte)
-            encoded.extend(self.long_address[1:])
+            encoded.append((self.long_address >> 24) & 0xFF)
+            encoded.append((self.long_address >> 16) & 0xFF)
+            encoded.append((self.long_address >> 8) & 0xFF)
+            encoded.append(self.long_address & 0xFF)
         else:
             first_byte = self.short_address
             if self.is_primary_master:
@@ -133,8 +136,7 @@ class HartFrame:
 
         try:
             if self.is_long_address:
-                address = '0x' + ''.join('{:02X}'.format(x)
-                                         for x in self.long_address)
+                address = '0x' + '{:010X}'.format(self.long_address)
             else:
                 address = self.short_address
         except TypeError:
@@ -188,6 +190,7 @@ class HartFrameBuilder:
         self.payload = None
         self.check_sum = None
         self.number_of_preambles = 0
+        self.long_address_length = 0
 
     def collect(self, iterator: Iterator[int]) -> bool:
         isNewFrameAvailable = False
@@ -212,8 +215,9 @@ class HartFrameBuilder:
                             self.state = State.LONG_ADDRESS
                         else:
                             self.state = State.SHORT_ADDRESS
-                        self.long_address = bytearray()
+                        self.long_address = 0
                         self.short_address = 0
+                        self.long_address_length = 0
                     else:
                         self.state = State.UNKNOWN
             elif self.state == State.SHORT_ADDRESS:
@@ -224,15 +228,18 @@ class HartFrameBuilder:
                     item & BURST_MODE_MASK) == BURST_MODE_MASK
                 self.state = State.COMMAND_NUMBER
             elif self.state == State.LONG_ADDRESS:
-                if len(self.long_address) == 0:
-                    self.long_address.append(item & ADDRESS_MASK)
+                if self.long_address_length == 0:
+                    self.long_address = (self.long_address << 8) | (
+                        item & ADDRESS_MASK)
+                    self.long_address_length += 1
                     self.is_primary_master = (
                         item & PRIMARY_MASTER_MASK) == PRIMARY_MASTER_MASK
                     self.is_burst = (
                         item & BURST_MODE_MASK) == BURST_MODE_MASK
                 else:
-                    self.long_address.append(item)
-                if len(self.long_address) == 5:
+                    self.long_address = (self.long_address << 8) | item
+                    self.long_address_length += 1
+                if self.long_address_length == 5:
                     self.state = State.COMMAND_NUMBER
             elif self.state == State.COMMAND_NUMBER:
                 self.command_number = item

@@ -18,8 +18,7 @@ class TestFramingUtils(unittest.TestCase):
         target = HartFrame(FrameType.ACK,
                            0,
                            is_long_address=True,
-                           long_address=bytearray(
-                               [0x12, 0x34, 0x56, 0x78, 0x9A]),
+                           long_address=0x123456789A,
                            data=bytearray([0x01, 0x02, 0x03]))
         self.assertEqual(target.serialize(), expected)
 
@@ -47,8 +46,7 @@ class TestFramingUtils(unittest.TestCase):
         target = builder.dequeue()
         self.assertEqual(target.type, FrameType.ACK)
         self.assertEqual(target.is_long_address, True)
-        self.assertEqual(target.long_address, bytearray(
-            [0x12, 0x34, 0x56, 0x78, 0x9A]))
+        self.assertEqual(target.long_address, 0x123456789A)
         self.assertEqual(target.is_primary_master, True)
         self.assertEqual(target.is_burst, False)
         self.assertEqual(target.command_number, 0)
@@ -67,8 +65,7 @@ DAT(0x010203)'
         target = HartFrame(FrameType.STX,
                            234,
                            is_long_address=True,
-                           long_address=bytearray(
-                               [0x12, 0x34, 0x56, 0x78, 0x9A]),
+                           long_address=0x123456789A,
                            is_primary_master=False,
                            is_burst=True,
                            data=bytearray([0x01, 0x02, 0x03]),

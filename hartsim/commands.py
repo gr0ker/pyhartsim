@@ -1,59 +1,26 @@
 from dataclasses import dataclass
 from .payloads import F32, U16, U24, U32, U8, Ascii, PackedAscii, PayloadSequence
-
-polling_address = U8(0)
-long_address = bytearray([0x26, 0x06, 0x12, 0x34, 0x56])
-is_burst_mode = False
-
-expanded_device_type = U16(0x2606)
-device_id: U24 = U24(0x123456)
-device_status = U8()
-extended_device_status = U8()
-config_change_counter = U16(0)
-
-loop_current_mode = U8(1)
-
-pv_units = U8(12)
-pv_value = F32(1.2345)
-pv_classification = U8(65)
-
-sv_units = U8(32)
-sv_value = F32(23.4567)
-sv_classification = U8()
-
-tv_units = U8(240)
-tv_value = F32(345)
-tv_classification = U8()
-
-qv_units = U8(12)
-qv_value = F32(1.2345)
-qv_classification = U8()
-
-loop_current = F32(4.321)
-percent_of_range = F32(0.0200625)
-
-message = PackedAscii(32, "THIS IS A MESSAGE")
-
-long_tag = Ascii(32, "This is a HART device simulator")
+from .devices import HartDevice
 
 
-def handle_request(command_number: int, data: bytearray) -> bytearray:
+def handle_request(device: HartDevice, command_number: int, data: bytearray)\
+        -> bytearray:
     if command_number == 0:
-        payload = Cmd0Reply()
+        payload = Cmd0Reply.create(device)
     elif command_number == 1:
-        payload = Cmd1Reply()
+        payload = Cmd1Reply.create(device)
     elif command_number == 2:
-        payload = Cmd2Reply()
+        payload = Cmd2Reply.create(device)
     elif command_number == 3:
-        payload = Cmd3Reply()
+        payload = Cmd3Reply.create(device)
     elif command_number == 7:
-        payload = Cmd7Reply()
+        payload = Cmd7Reply.create(device)
     elif command_number == 8:
-        payload = Cmd8Reply()
+        payload = Cmd8Reply.create(device)
     elif command_number == 9:
         request = Cmd9Request()
         request.deserialize(iter(data))
-        payload = Cmd9Reply()
+        payload = Cmd9Reply.create(device)
         payload.device_variable_code_1.set_value(
             request.device_variable_code_1.get_value())
         if request.device_variable_code_2.is_skipped():
@@ -155,11 +122,12 @@ def handle_request(command_number: int, data: bytearray) -> bytearray:
             payload.device_variable_value_8.include()
             payload.device_variable_status_8.include()
     elif command_number == 12:
-        payload = Cmd12Reply()
+        payload = Cmd12Reply.create(device)
     elif command_number == 20:
-        payload = Cmd20Reply()
+        payload = Cmd20Reply.create(device)
     else:
-        payload = ErrorReply(response_code=U8(64))
+        payload = ErrorReply.create(device)
+        payload.response_code = U8(64)
 
     return list(payload)
 
@@ -167,72 +135,124 @@ def handle_request(command_number: int, data: bytearray) -> bytearray:
 @dataclass
 class Cmd0Reply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
+    device_status: U8 = U8()
     expansion_code: U8 = U8(254)
-    expanded_device_type: U16 = expanded_device_type
+    expanded_device_type: U16 = U16()
     request_preambles: U8 = U8(5)
     universal_revision: U8 = U8(7)
     device_revision: U8 = U8(10)
     software_revision: U8 = U8(3)
     hardware_revision_signaling_code: U8 = U8(0x64)
     flags: U8 = U8()
-    device_id: U24 = device_id
+    device_id: U24 = U24()
     response_preambles: U8 = U8(5)
     max_device_variables: U8 = U8(1)
-    config_change_counter: U16 = config_change_counter
-    extended_device_status: U8 = extended_device_status
+    config_change_counter: U16 = U16()
+    extended_device_status: U8 = U8()
     manufacturer_code: U16 = U16(0x0026)
     private_label_distributor: U16 = U16(0x0026)
     device_profile: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return Cmd0Reply(
+            device_status=device.device_status,
+            expanded_device_type=device.expanded_device_type,
+            device_id=device.device_id,
+            config_change_counter=device.config_change_counter,
+            extended_device_status=device.extended_device_status)
 
 
 @dataclass
 class Cmd1Reply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
-    pv_units: U8 = pv_units
-    pv_value: F32 = pv_value
+    device_status: U8 = U8()
+    pv_units: U8 = U8()
+    pv_value: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return Cmd1Reply(
+            device_status=device.device_status,
+            pv_units=device.pv_units,
+            pv_value=device.pv_value)
 
 
 @dataclass
 class Cmd2Reply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
-    loop_current: U8 = loop_current
-    percent_of_range: F32 = percent_of_range
+    device_status: U8 = U8()
+    loop_current: U8 = U8()
+    percent_of_range: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return Cmd2Reply(
+            device_status=device.device_status,
+            loop_current=device.loop_current,
+            percent_of_range=device.percent_of_range)
 
 
 @dataclass
 class Cmd3Reply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
-    loop_current: U8 = loop_current
-    pv_units: U8 = pv_units
-    pv_value: F32 = pv_value
-    sv_units: U8 = sv_units
-    sv_value: F32 = sv_value
-    tv_units: U8 = tv_units
-    tv_value: F32 = tv_value
-    qv_units: U8 = qv_units
-    qv_value: F32 = qv_value
+    device_status: U8 = U8()
+    loop_current: F32 = F32()
+    pv_units: U8 = U8()
+    pv_value: F32 = F32()
+    sv_units: U8 = U8()
+    sv_value: F32 = F32()
+    tv_units: U8 = U8()
+    tv_value: F32 = F32()
+    qv_units: U8 = U8()
+    qv_value: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return Cmd3Reply(
+            device_status=device.device_status,
+            pv_units=device.pv_units,
+            pv_value=device.pv_value,
+            sv_units=device.sv_units,
+            sv_value=device.sv_value,
+            tv_units=device.tv_units,
+            tv_value=device.tv_value,
+            qv_units=device.qv_units,
+            qv_value=device.qv_value)
 
 
 @dataclass
 class Cmd7Reply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
-    polling_address: U8 = polling_address
-    loop_current_mode: U8 = loop_current_mode
+    device_status: U8 = U8()
+    polling_address: U8 = U8()
+    loop_current_mode: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return Cmd7Reply(
+            device_status=device.device_status,
+            polling_address=device.polling_address,
+            loop_current_mode=device.loop_current_mode)
 
 
 @dataclass
 class Cmd8Reply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
-    pv_classification: U8 = pv_classification
-    sv_classification: F32 = sv_classification
-    tv_classification: U8 = tv_classification
-    qv_classification: F32 = qv_classification
+    device_status: U8 = U8()
+    pv_classification: U8 = U8()
+    sv_classification: U8 = U8()
+    tv_classification: U8 = U8()
+    qv_classification: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return Cmd8Reply(
+            device_status=device.device_status,
+            pv_classification=device.pv_classification,
+            sv_classification=device.sv_classification,
+            tv_classification=device.tv_classification,
+            qv_classification=device.qv_classification)
 
 
 @dataclass
@@ -250,8 +270,8 @@ class Cmd9Request (PayloadSequence):
 @dataclass
 class Cmd9Reply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
-    extended_device_status: U8 = extended_device_status
+    device_status: U8 = U8()
+    extended_device_status: U8 = U8()
     device_variable_code_1: U8 = U8()
     device_variable_classification_1: U8 = U8()
     device_variable_units_1: U8 = U8()
@@ -294,22 +314,46 @@ class Cmd9Reply (PayloadSequence):
     device_variable_status_8: U8 = U8(is_optional=True)
     timestamp: U32 = U32()
 
+    @classmethod
+    def create(cls, device: HartDevice):
+        return Cmd9Reply(
+            device_status=device.device_status,
+            extended_device_status=device.extended_device_status)
+
 
 @dataclass
 class Cmd12Reply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
-    message: PackedAscii = message
+    device_status: U8 = U8()
+    message: PackedAscii = PackedAscii(32)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return Cmd12Reply(
+            device_status=device.device_status,
+            message=device.message)
 
 
 @dataclass
 class Cmd20Reply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
-    long_tag: Ascii = long_tag
+    device_status: U8 = U8()
+    long_tag: Ascii = Ascii(32)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return Cmd20Reply(
+            device_status=device.device_status,
+            long_tag=device.long_tag)
 
 
 @dataclass
 class ErrorReply (PayloadSequence):
     response_code: U8 = U8()
-    device_status: U8 = device_status
+    device_status: U8 = U8()
+
+    @classmethod
+    def create(device: HartDevice, response_code: U8):
+        return ErrorReply(
+            device_status=device.device_status,
+            response_code=response_code)
