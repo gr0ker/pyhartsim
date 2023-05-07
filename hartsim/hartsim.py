@@ -30,6 +30,7 @@ device3051 = HartDevice(
     hart_long_tag=Ascii(32, "This is 3051 rev 10             "))
 
 device150 = HartDevice(
+    universal_revision=U8(5),
     polling_address=U8(1),
     long_address=0x7FFFFFFFFF & 0x9979789ABC,
     expanded_device_type=U16(0x9979),

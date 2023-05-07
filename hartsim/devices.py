@@ -16,6 +16,7 @@ class HartDevice:
     hart_message: PackedAscii = PackedAscii(
         32, "????????????????????????????????")
     hart_long_tag: Ascii = Ascii(32, "                                ")
+    universal_revision: U8 = U8(7)
     # HART status
     device_status: U8 = U8()
     extended_device_status: U8 = U8()
