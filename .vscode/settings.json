@@ -2,6 +2,7 @@
     "cSpell.words": [
         "baudrate",
         "bytesize",
+        "dataclass",
         "framingutils",
         "hartsim",
         "pytest",
