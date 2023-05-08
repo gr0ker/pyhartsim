@@ -33,9 +33,13 @@ class TestPayloads(unittest.TestCase):
 
     def test_abstract_serialize_does_nothing(self):
         target = Payload()
-        for unused in target:
-            self.fail(
-                f'No items expected in an abstract payload but received {unused}')
+        iterator = iter(target)
+        noItems = False
+        try:
+            next(iterator)
+        except StopIteration:
+            noItems = True
+        self.assertTrue(noItems)
 
     def test_abstract_deserialize_does_not_throw(self):
         serialized = bytearray([0x01, 0x02, 0x03, 0x04, 0x05])
@@ -650,4 +654,4 @@ class TestPayloads(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main()  # pragma: no cover

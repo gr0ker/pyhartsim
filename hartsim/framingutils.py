@@ -64,11 +64,14 @@ class HartFrame:
         encoded = bytearray()
 
         # delimiter
-        encoded.append(
-            self.type.value | LONG_ADDRESS_MASK
-            if self.is_long_address
-            else
-            self.type.value)
+        try:
+            encoded.append(
+                self.type.value | LONG_ADDRESS_MASK
+                if self.is_long_address
+                else
+                self.type.value)
+        except AttributeError:
+            encoded.append(0)
 
         # address
         if self.is_long_address:
@@ -110,36 +113,42 @@ class HartFrame:
         return encoded
 
     def is_valid(self) -> bool:
-        return self.serialize()[-1] == self.check_sum
+        return self.serialize(False)[-1] == self.check_sum
 
     def __repr__(self):
-        try:
+        if type(self.type) is FrameType and FrameType.has_value(self.type.value):
             kind = f'{self.type}'
-        except TypeError:
+        else:
             kind = __UNDEFINED_NAME__
 
-        try:
+        if type(self.is_primary_master) is bool:
             if self.is_primary_master:
                 master = __PRIMARY_NAME__
             else:
                 master = __SECONDARY_NAME__
-        except TypeError:
+        else:
             master = __UNDEFINED_NAME__
 
-        try:
+        if type(self.is_burst) is bool:
             if self.is_burst:
                 burst = __BURST_NAME__
             else:
                 burst = __POLLING_NAME__
-        except TypeError:
+        else:
             burst = __UNDEFINED_NAME__
 
-        try:
+        if type(self.is_long_address) is bool:
             if self.is_long_address:
-                address = '0x' + '{:010X}'.format(self.long_address)
+                if type(self.long_address) is int:
+                    address = '0x' + '{:010X}'.format(self.long_address)
+                else:
+                    address = __UNDEFINED_NAME__
             else:
-                address = self.short_address
-        except TypeError:
+                if type(self.short_address) is int:
+                    address = self.short_address
+                else:
+                    address = __UNDEFINED_NAME__
+        else:
             address = __UNDEFINED_NAME__
 
         try:

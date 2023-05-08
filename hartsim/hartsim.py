@@ -25,7 +25,7 @@ frameBuilder = HartFrameBuilder()
 
 device3051 = HartDevice(
     polling_address=U8(0),
-    long_address=0x7FFFFFFFFF & 0x2606123456,
+    long_address=0x3FFFFFFFFF & 0x2606123456,
     expanded_device_type=U16(0x2606),
     device_id=U24(0x123456),
     hart_tag=PackedAscii(8, "3051 r10"),
@@ -34,7 +34,7 @@ device3051 = HartDevice(
 device150 = HartDevice(
     universal_revision=U8(5),
     polling_address=U8(1),
-    long_address=0x7FFFFFFFFF & 0x9979789ABC,
+    long_address=0x3FFFFFFFFF & 0x9979789ABC,
     expanded_device_type=U16(0x9979),
     device_id=U24(0x789ABC),
     hart_tag=PackedAscii(8, "150 r10 "),
