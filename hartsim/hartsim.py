@@ -19,6 +19,8 @@ port.flush()
 port.read_all()
 port.dtr = False
 
+print(f'Listening {config.port}')
+
 frameBuilder = HartFrameBuilder()
 
 device3051 = HartDevice(
@@ -48,12 +50,18 @@ unique_map = {
     device150.long_address: device150
 }
 
+for short_address in poll_map:
+    print(
+        f'  Address #{short_address}: \
+Type=0x{poll_map[short_address].expanded_device_type.get_value():04X}, \
+ID=0x{poll_map[short_address].device_id.get_value():06X}')
+
 while True:
     if port.in_waiting:
         data = port.read_all()
         if frameBuilder.collect(iter(data)):
             request = frameBuilder.dequeue()
-            print(f'<= {request}')
+            print(f'{config.port}    <= {request}')
             device = None
             if request.is_long_address:
                 if request.long_address in unique_map:
@@ -77,8 +85,9 @@ while True:
                 port.dtr = True
                 port.write(reply_data)
                 port.dtr = False
-                print(f'=> {reply}')
+                print(
+                    f'{config.port} #{device.polling_address.get_value()} => {reply}')
             else:
-                print('=> None')
+                print(f'{config.port} => None')
     else:
         time.sleep(0.01)
