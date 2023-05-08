@@ -5,7 +5,7 @@ from attr import dataclass
 import pytest
 
 from hartsim import Unsigned, U8, U16, U24, U32, PayloadSequence
-from hartsim.payloads import F32, Ascii, PackedAscii
+from hartsim.payloads import Payload, F32, Ascii, PackedAscii
 
 
 @dataclass
@@ -22,7 +22,27 @@ class PayloadSequenceOptionalExample(PayloadSequence):
     third_word: U16 = U16(is_optional=True)
 
 
+@dataclass
+class PayloadSequenceMiddleOptionalExample(PayloadSequence):
+    first_byte: U8 = U8()
+    second_byte: U8 = U8(is_optional=True)
+    third_word: U16 = U16()
+
+
 class TestPayloads(unittest.TestCase):
+
+    def test_abstract_serialize_does_nothing(self):
+        target = Payload()
+        for unused in target:
+            self.fail(
+                f'No items expected in an abstract payload but received {unused}')
+
+    def test_abstract_deserialize_does_not_throw(self):
+        serialized = bytearray([0x01, 0x02, 0x03, 0x04, 0x05])
+        target = Payload()
+        serialized_iterator = iter(serialized)
+        next(serialized_iterator)
+        target.deserialize(serialized_iterator)
 
     def test_unsigned_default_value_is_zero(self):
         expected = 0
@@ -362,54 +382,71 @@ class TestPayloads(unittest.TestCase):
         expected = "?THIS?IS A ?TEST?.?"
         target = PackedAscii(size, value)
         self.assertEqual(target.get_value(), expected)
+        self.assertEqual(target.get_size(), size)
+
+    def test_packed_ascii_wider_value(self):
+        size = 14
+        value = "THIS IS A WIDEST"
+        expected = "THIS IS A WIDE"
+        target = PackedAscii(size, value)
+        self.assertEqual(target.get_value(), expected)
+        self.assertEqual(target.get_size(), size)
 
     def test_packed_ascii_packed_size_1(self):
         size = 1
         expected = 1
         target = PackedAscii(size)
         self.assertEqual(target.get_packed_size(), expected)
+        self.assertEqual(target.get_size(), size)
 
     def test_packed_ascii_size_2(self):
         size = 2
         expected = 2
         target = PackedAscii(size)
         self.assertEqual(target.get_packed_size(), expected)
+        self.assertEqual(target.get_size(), size)
 
     def test_packed_ascii_size_3(self):
         size = 3
         expected = 3
         target = PackedAscii(size)
         self.assertEqual(target.get_packed_size(), expected)
+        self.assertEqual(target.get_size(), size)
 
     def test_packed_ascii_size_4(self):
         size = 4
         expected = 3
         target = PackedAscii(size)
         self.assertEqual(target.get_packed_size(), expected)
+        self.assertEqual(target.get_size(), size)
 
     def test_packed_ascii_packed_size_5(self):
         size = 5
         expected = 4
         target = PackedAscii(size)
         self.assertEqual(target.get_packed_size(), expected)
+        self.assertEqual(target.get_size(), size)
 
     def test_packed_ascii_size_6(self):
         size = 6
         expected = 5
         target = PackedAscii(size)
         self.assertEqual(target.get_packed_size(), expected)
+        self.assertEqual(target.get_size(), size)
 
     def test_packed_ascii_size_7(self):
         size = 7
         expected = 6
         target = PackedAscii(size)
         self.assertEqual(target.get_packed_size(), expected)
+        self.assertEqual(target.get_size(), size)
 
     def test_packed_ascii_size_8(self):
         size = 8
         expected = 6
         target = PackedAscii(size)
         self.assertEqual(target.get_packed_size(), expected)
+        self.assertEqual(target.get_size(), size)
 
     def test_packed_ascii_serialize_1(self):
         size = 1
@@ -596,7 +633,20 @@ class TestPayloads(unittest.TestCase):
         target.deserialize(iter(serialized))
         self.assertEqual(target.first_byte.get_value(), 0x09)
         self.assertEqual(target.second_byte.get_value(), 0x08)
-        self.assertEqual(target.third_word.is_skipped(), True)
+        self.assertTrue(target.third_word.is_skipped())
+
+    def test_payload_sequence_is_serialized_without_skipped(self):
+        expected = bytearray([0x04, 0x02, 0x01])
+        target = PayloadSequenceMiddleOptionalExample()
+        target.first_byte.set_value(0x04)
+        target.second_byte.set_value(0x03)
+        target.second_byte.skip()
+        target.third_word.set_value(0x0201)
+        expectedIndex = 0
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
 
 
 if __name__ == '__main__':

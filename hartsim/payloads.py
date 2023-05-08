@@ -46,7 +46,7 @@ class Payload:
 
     @abstractmethod
     def __next__(self):
-        pass
+        raise StopIteration
 
     @abstractmethod
     def _deserialize(self, iterator: Iterator[int]):
@@ -245,15 +245,12 @@ class PackedAscii(Payload):
             right_index = left_index + 1
             right_shift = 6 - left_shift
 
-            if left_index < self.__size:
-                if left_index < len(self.__value):
-                    value = self.__value[left_index]
-                else:
-                    value = PACKED_ASCII_FILLER
-                left = ((ord(value) & PACKED_ASCII_MASK)
-                        << left_shift) & FULL_BYTE_MASK
+            if left_index < len(self.__value):
+                value = self.__value[left_index]
             else:
-                left = 0
+                value = PACKED_ASCII_FILLER
+            left = ((ord(value) & PACKED_ASCII_MASK)
+                    << left_shift) & FULL_BYTE_MASK
 
             if right_index < self.__size:
                 if right_index < len(self.__value):

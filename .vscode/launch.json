@@ -12,6 +12,13 @@
             "justMyCode": true
         },
         {
+            "name": "Python: unit test",
+            "type": "python",
+            "request": "launch",
+            "module": "hartsim.hartsim",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
