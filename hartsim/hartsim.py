@@ -63,12 +63,19 @@ while True:
             request = frameBuilder.dequeue()
             print(f'{config.port}    <= {request}')
             device = None
+            status = None
             if request.is_long_address:
                 if request.long_address in unique_map:
                     device = unique_map[request.long_address]
+                else:
+                    status =\
+                        f'Long address 0x{request.long_address:010X} does not match'
             else:
                 if request.short_address in poll_map:
                     device = poll_map[request.short_address]
+                else:
+                    status =\
+                        f'Polling address {request.short_address} does not match'
             if device is not None:
                 payload = handle_request(
                     device, request.command_number, request.data)
@@ -88,6 +95,6 @@ while True:
                 print(
                     f'{config.port} #{device.polling_address.get_value()} => {reply}')
             else:
-                print(f'{config.port} => None')
+                print(f'{config.port} => None ({status})')
     else:
         time.sleep(0.01)
