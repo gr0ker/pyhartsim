@@ -374,10 +374,6 @@ class Cmd13Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
-        print(device.hart_date)
-        print(U24(0x010100))
-        print(device.hart_descriptor)
-        print(PackedAscii(16, "????????????????"))
         return cls(
             device_status=device.device_status,
             hart_tag=device.hart_tag,
