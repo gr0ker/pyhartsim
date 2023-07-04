@@ -5,7 +5,7 @@ from attr import dataclass
 import pytest
 
 from hartsim import Unsigned, U8, U16, U24, U32, PayloadSequence
-from hartsim.payloads import Payload, F32, Ascii, PackedAscii
+from hartsim.payloads import GreedyU8Array, Payload, F32, Ascii, PackedAscii
 
 
 @dataclass
@@ -604,6 +604,55 @@ class TestPayloads(unittest.TestCase):
         next(serialized_iterator)
         target.deserialize(serialized_iterator)
         self.assertEqual(target.get_value(), expected)
+
+    def test_greedy_u8_array_default_value_is_empty(self):
+        expected = bytearray(b'')
+        target = GreedyU8Array()
+        self.assertEqual(target.get_value(), expected)
+
+    def test_greedy_u8_array_min_size_is_zero(self):
+        expected = 0
+        target = GreedyU8Array()
+        self.assertEqual(target.get_size(), expected)
+
+    def test_greedy_u8_array_init_value(self):
+        value = bytearray([0x01, 0x02, 0x03, 0x04, 0x05])
+        expected = value
+        target = GreedyU8Array(value)
+        self.assertEqual(target.get_value(), expected)
+
+    def test_greedy_u8_array_assign_value(self):
+        value = bytearray([0x06, 0x07, 0x08])
+        expected = value
+        target = GreedyU8Array()
+        target.set_value(value)
+        self.assertEqual(target.get_value(), expected)
+
+    def test_greedy_u8_array_deserialize(self):
+        serialized = bytearray([0x20,
+                                0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20,
+                                0x61, 0x20, 0x74, 0x65, 0x73, 0x74, 0x2e, 0x20,
+                                0x44, 0x6f, 0x65, 0x73, 0x20, 0x69, 0x74, 0x20,
+                                0x70, 0x61, 0x73, 0x73, 0x3f, 0x20, 0x48, 0x6d])
+        expected = serialized
+        target = GreedyU8Array()
+        serialized_iterator = iter(serialized)
+        next(serialized_iterator)
+        target.deserialize(serialized_iterator)
+        self.assertEqual(target.get_value(), expected[1:])
+
+    def test_greedy_u8_array_serialize(self):
+        expected = bytearray([0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20,
+                              0x61, 0x20, 0x74, 0x65, 0x73, 0x74, 0x2e, 0x20,
+                              0x44, 0x6f, 0x65, 0x73, 0x20, 0x69, 0x74, 0x20,
+                              0x70, 0x61, 0x73, 0x73, 0x3f, 0x20, 0x48, 0x6d])
+        value = expected
+        expectedIndex = 0
+        target = GreedyU8Array(value)
+        for item in target:
+            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
+            expectedIndex += 1
+        self.assertEqual(expectedIndex, len(expected))
 
     def test_payload_sequence_is_serialized(self):
         expected = bytearray([0x04, 0x03, 0x02, 0x01])

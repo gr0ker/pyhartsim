@@ -322,3 +322,37 @@ class PayloadSequence(Payload):
                     self.__dict__[attr].skip()
                 else:
                     raise
+
+
+class GreedyU8Array(Payload):
+    def __init__(self,
+                 value: bytearray = bytearray(),
+                 is_optional: bool = False):
+        self.set_value(value)
+        super().__init__(is_optional)
+
+    def get_size(self):
+        return len(self.__value)
+
+    def get_value(self) -> bytearray:
+        return self.__value
+
+    def set_value(self, value: bytearray):
+        self.__value = value
+
+    def __next__(self):
+        if self._offset < len(self.__value):
+            next = self.__value[self._offset]
+            self._offset += 1
+            return next
+        else:
+            raise StopIteration
+
+    def _deserialize(self, iterator: Iterator[int]):
+        value = []
+        while True:
+            try:
+                value.append(next(iterator))
+            except StopIteration:
+                break
+        self.set_value(bytearray(value))
