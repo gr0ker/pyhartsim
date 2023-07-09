@@ -1,10 +1,18 @@
 from dataclasses import dataclass
-from .payloads import F32, U16, U24, U32, U8, Ascii, PackedAscii, PayloadSequence
+from .payloads import F32, U16, U24, U32, U8, Ascii, GreedyU8Array, PackedAscii
+from .payloads import PayloadSequence
 from .devices import HartDevice
 
 
 def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         -> bytearray:
+    is_extended_command = command_number == 31
+    if is_extended_command:
+        request = Cmd31Request()
+        request.deserialize(iter(data))
+        command_number = request.extended_command_number
+        data = request.request_data
+
     if command_number == 0:
         # TODO move logic to HartDevice class
         if device.universal_revision.get_value() == 5:
@@ -33,6 +41,15 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd20Reply.create(device)
     else:
         payload = ErrorReply.create(device, U8(64))
+
+    if is_extended_command:
+        payload = Cmd31Reply.create(
+            device,
+            payload.response_code,
+            command_number,
+            # skip Response Code and Device Status
+            GreedyU8Array(bytearray(payload)[2:]))
+        command_number = 31
 
     return list(payload)
 
@@ -404,3 +421,29 @@ class ErrorReply (PayloadSequence):
         return cls(
             device_status=device.device_status,
             response_code=response_code)
+
+
+@dataclass
+class Cmd31Request (PayloadSequence):
+    extended_command_number: U16 = U16()
+    request_data: GreedyU8Array = GreedyU8Array()
+
+
+@dataclass
+class Cmd31Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    extended_command_number: U16 = U16()
+    response_data: GreedyU8Array = GreedyU8Array()
+
+    @classmethod
+    def create(cls,
+               device: HartDevice,
+               response_code: U8,
+               extended_command_number: U16,
+               response_data: GreedyU8Array):
+        return cls(
+            device_status=device.device_status,
+            response_code=response_code,
+            extended_command_number=extended_command_number,
+            response_data=response_data)

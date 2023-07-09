@@ -338,7 +338,7 @@ class GreedyU8Array(Payload):
         return self.__value
 
     def set_value(self, value: bytearray):
-        self.__value = value
+        self.__value = bytearray(value)
 
     def __next__(self):
         if self._offset < len(self.__value):
