@@ -113,14 +113,14 @@ class Cmd1Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
     pv_units: U8 = U8()
-    pv_value: F32 = F32(random.random())
+    pv_value: F32 = F32()
 
     @classmethod
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status,
-            pv_units=device.pv_units,
-            pv_value=device.pv_value)
+            pv_units=device.device_variables[device.dynamic_variables[0]].units,
+            pv_value=device.device_variables[device.dynamic_variables[0]].value,)
 
 
 @dataclass
@@ -128,7 +128,7 @@ class Cmd2Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
     loop_current: U8 = U8()
-    percent_of_range: F32 = F32(random.random())
+    percent_of_range: F32 = F32()
 
     @classmethod
     def create(cls, device: HartDevice):
@@ -142,28 +142,29 @@ class Cmd2Reply (PayloadSequence):
 class Cmd3Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    loop_current: F32 = F32(random.random())
+    loop_current: F32 = F32()
     pv_units: U8 = U8()
-    pv_value: F32 = F32(random.random())
+    pv_value: F32 = F32()
     sv_units: U8 = U8()
-    sv_value: F32 = F32(random.random())
+    sv_value: F32 = F32()
     tv_units: U8 = U8()
-    tv_value: F32 = F32(random.random())
+    tv_value: F32 = F32()
     qv_units: U8 = U8()
-    qv_value: F32 = F32(random.random())
+    qv_value: F32 = F32()
 
     @classmethod
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status,
-            pv_units=device.pv_units,
-            pv_value=device.pv_value,
-            sv_units=device.sv_units,
-            sv_value=device.sv_value,
-            tv_units=device.tv_units,
-            tv_value=device.tv_value,
-            qv_units=device.qv_units,
-            qv_value=device.qv_value)
+            loop_current=device.loop_current,
+            pv_units=device.device_variables[device.dynamic_variables[0]].units,
+            pv_value=device.device_variables[device.dynamic_variables[0]].value,
+            sv_units=device.device_variables[device.dynamic_variables[1]].units,
+            sv_value=device.device_variables[device.dynamic_variables[1]].value,
+            tv_units=device.device_variables[device.dynamic_variables[2]].units,
+            tv_value=device.device_variables[device.dynamic_variables[2]].value,
+            qv_units=device.device_variables[device.dynamic_variables[3]].units,
+            qv_value=device.device_variables[device.dynamic_variables[3]].value)
 
 
 @dataclass
@@ -194,10 +195,10 @@ class Cmd8Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status,
-            pv_classification=device.pv_classification,
-            sv_classification=device.sv_classification,
-            tv_classification=device.tv_classification,
-            qv_classification=device.qv_classification)
+            pv_classification=device.device_variables[device.dynamic_variables[0]].classification,
+            sv_classification=device.device_variables[device.dynamic_variables[1]].classification,
+            tv_classification=device.device_variables[device.dynamic_variables[2]].classification,
+            qv_classification=device.device_variables[device.dynamic_variables[3]].classification)
 
 
 @dataclass
@@ -220,42 +221,42 @@ class Cmd9Reply (PayloadSequence):
     device_variable_code_1: U8 = U8()
     device_variable_classification_1: U8 = U8()
     device_variable_units_1: U8 = U8()
-    device_variable_value_1: F32 = F32(random.random())
+    device_variable_value_1: F32 = F32()
     device_variable_status_1: U8 = U8()
     device_variable_code_2: U8 = U8(is_optional=True)
     device_variable_classification_2: U8 = U8(is_optional=True)
     device_variable_units_2: U8 = U8(is_optional=True)
-    device_variable_value_2: F32 = F32(random.random(), is_optional=True)
+    device_variable_value_2: F32 = F32(is_optional=True)
     device_variable_status_2: U8 = U8(is_optional=True)
     device_variable_code_3: U8 = U8(is_optional=True)
     device_variable_classification_3: U8 = U8(is_optional=True)
     device_variable_units_3: U8 = U8(is_optional=True)
-    device_variable_value_3: F32 = F32(random.random(), is_optional=True)
+    device_variable_value_3: F32 = F32(is_optional=True)
     device_variable_status_3: U8 = U8(is_optional=True)
     device_variable_code_4: U8 = U8(is_optional=True)
     device_variable_classification_4: U8 = U8(is_optional=True)
     device_variable_units_4: U8 = U8(is_optional=True)
-    device_variable_value_4: F32 = F32(random.random(), is_optional=True)
+    device_variable_value_4: F32 = F32(is_optional=True)
     device_variable_status_4: U8 = U8(is_optional=True)
     device_variable_code_5: U8 = U8(is_optional=True)
     device_variable_classification_5: U8 = U8(is_optional=True)
     device_variable_units_5: U8 = U8(is_optional=True)
-    device_variable_value_5: F32 = F32(random.random(), is_optional=True)
+    device_variable_value_5: F32 = F32(is_optional=True)
     device_variable_status_5: U8 = U8(is_optional=True)
     device_variable_code_6: U8 = U8(is_optional=True)
     device_variable_classification_6: U8 = U8(is_optional=True)
     device_variable_units_6: U8 = U8(is_optional=True)
-    device_variable_value_6: F32 = F32(random.random(), is_optional=True)
+    device_variable_value_6: F32 = F32(is_optional=True)
     device_variable_status_6: U8 = U8(is_optional=True)
     device_variable_code_7: U8 = U8(is_optional=True)
     device_variable_classification_7: U8 = U8(is_optional=True)
     device_variable_units_7: U8 = U8(is_optional=True)
-    device_variable_value_7: F32 = F32(random.random(), is_optional=True)
+    device_variable_value_7: F32 = F32(is_optional=True)
     device_variable_status_7: U8 = U8(is_optional=True)
     device_variable_code_8: U8 = U8(is_optional=True)
     device_variable_classification_8: U8 = U8(is_optional=True)
     device_variable_units_8: U8 = U8(is_optional=True)
-    device_variable_value_8: F32 = F32(random.random(), is_optional=True)
+    device_variable_value_8: F32 = F32(is_optional=True)
     device_variable_status_8: U8 = U8(is_optional=True)
     timestamp: U32 = U32()
 
@@ -267,6 +268,16 @@ class Cmd9Reply (PayloadSequence):
 
         payload.device_variable_code_1.set_value(
             request.device_variable_code_1.get_value())
+
+        payload.device_variable_classification_1.set_value(
+            device.device_variables[device.dynamic_variables[request.device_variable_code_1.get_value()]].classification)
+        payload.device_variable_units_1.set_value(
+            device.device_variables[device.dynamic_variables[request.device_variable_code_1.get_value()]].units)
+        payload.device_variable_value_1.set_value(
+            device.device_variables[device.dynamic_variables[request.device_variable_code_1.get_value()]].value)
+        payload.device_variable_status_1.set_value(
+            device.device_variables[device.dynamic_variables[request.device_variable_code_1.get_value()]].status)
+
         if request.device_variable_code_2.is_skipped():
             payload.device_variable_code_2.skip()
             payload.device_variable_classification_2.skip()
@@ -277,10 +288,18 @@ class Cmd9Reply (PayloadSequence):
             payload.device_variable_code_2.set_value(
                 request.device_variable_code_2.get_value())
             payload.device_variable_code_2.include()
+            payload.device_variable_classification_2.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_2.get_value()]].classification)
             payload.device_variable_classification_2.include()
             payload.device_variable_units_2.include()
+            payload.device_variable_units_2.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_2.get_value()]].units)
             payload.device_variable_value_2.include()
+            payload.device_variable_value_2.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_2.get_value()]].value)
             payload.device_variable_status_2.include()
+            payload.device_variable_status_2.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_2.get_value()]].status)
         if request.device_variable_code_3.is_skipped():
             payload.device_variable_code_3.skip()
             payload.device_variable_classification_3.skip()
@@ -292,9 +311,17 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_3.get_value())
             payload.device_variable_code_3.include()
             payload.device_variable_classification_3.include()
+            payload.device_variable_classification_3.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_3.get_value()]].classification)
             payload.device_variable_units_3.include()
+            payload.device_variable_units_3.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_3.get_value()]].units)
             payload.device_variable_value_3.include()
+            payload.device_variable_value_3.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_3.get_value()]].value)
             payload.device_variable_status_3.include()
+            payload.device_variable_status_3.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_3.get_value()]].status)
         if request.device_variable_code_4.is_skipped():
             payload.device_variable_code_4.skip()
             payload.device_variable_classification_4.skip()
@@ -306,9 +333,17 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_4.get_value())
             payload.device_variable_code_4.include()
             payload.device_variable_classification_4.include()
+            payload.device_variable_classification_4.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_4.get_value()]].classification)
             payload.device_variable_units_4.include()
+            payload.device_variable_units_4.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_4.get_value()]].units)
             payload.device_variable_value_4.include()
+            payload.device_variable_value_4.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_4.get_value()]].value)
             payload.device_variable_status_4.include()
+            payload.device_variable_status_4.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_4.get_value()]].status)
         if request.device_variable_code_5.is_skipped():
             payload.device_variable_code_5.skip()
             payload.device_variable_classification_5.skip()
@@ -320,9 +355,17 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_5.get_value())
             payload.device_variable_code_5.include()
             payload.device_variable_classification_5.include()
+            payload.device_variable_classification_5.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_5.get_value()]].classification)
             payload.device_variable_units_5.include()
+            payload.device_variable_units_5.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_5.get_value()]].units)
             payload.device_variable_value_5.include()
+            payload.device_variable_value_5.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_5.get_value()]].value)
             payload.device_variable_status_5.include()
+            payload.device_variable_status_5.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_5.get_value()]].status)
         if request.device_variable_code_6.is_skipped():
             payload.device_variable_code_6.skip()
             payload.device_variable_classification_6.skip()
@@ -334,9 +377,17 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_6.get_value())
             payload.device_variable_code_6.include()
             payload.device_variable_classification_6.include()
+            payload.device_variable_classification_6.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_6.get_value()]].classification)
             payload.device_variable_units_6.include()
+            payload.device_variable_units_6.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_6.get_value()]].units)
             payload.device_variable_value_6.include()
+            payload.device_variable_value_6.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_6.get_value()]].value)
             payload.device_variable_status_6.include()
+            payload.device_variable_status_6.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_6.get_value()]].status)
         if request.device_variable_code_7.is_skipped():
             payload.device_variable_code_7.skip()
             payload.device_variable_classification_7.skip()
@@ -348,9 +399,17 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_7.get_value())
             payload.device_variable_code_7.include()
             payload.device_variable_classification_7.include()
+            payload.device_variable_classification_7.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_7.get_value()]].classification)
             payload.device_variable_units_7.include()
+            payload.device_variable_units_7.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_7.get_value()]].units)
             payload.device_variable_value_7.include()
+            payload.device_variable_value_7.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_7.get_value()]].value)
             payload.device_variable_status_7.include()
+            payload.device_variable_status_7.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_7.get_value()]].status)
         if request.device_variable_code_8.is_skipped():
             payload.device_variable_code_8.skip()
             payload.device_variable_classification_8.skip()
@@ -362,9 +421,17 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_8.get_value())
             payload.device_variable_code_8.include()
             payload.device_variable_classification_8.include()
+            payload.device_variable_classification_8.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_8.get_value()]].classification)
             payload.device_variable_units_8.include()
+            payload.device_variable_units_8.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_8.get_value()]].units)
             payload.device_variable_value_8.include()
+            payload.device_variable_value_8.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_8.get_value()]].value)
             payload.device_variable_status_8.include()
+            payload.device_variable_status_8.set_value(
+                device.device_variables[device.dynamic_variables[request.device_variable_code_8.get_value()]].status)
 
         return payload
 

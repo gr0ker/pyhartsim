@@ -3,7 +3,17 @@ from .payloads import F32, U16, U24, U8, Ascii, PackedAscii
 
 
 @dataclass
+class DeviceVariable:
+    units: U8 = U8()
+    value: F32 = F32()
+    classification: U8 = U8()
+    status: U8 = U8()
+
+
+@dataclass
 class HartDevice:
+    device_variables: dict[int, DeviceVariable]
+    dynamic_variables: dict[int, int]
     # HART identification
     polling_address: U8 = U8(0)
     long_address: int = 0x2606123456
@@ -26,16 +36,27 @@ class HartDevice:
     loop_current_mode: U8 = U8(1)
     loop_current: F32 = F32(4.321)
     percent_of_range: F32 = F32(0.0200625)
+    # Device Variables
+    # pressure: DeviceVariable = DeviceVariable(12, 1.2345, 65, 192)
+    # temperature: DeviceVariable = DeviceVariable(32, 23.456, 0, 192)
+    # flow: DeviceVariable = DeviceVariable(241, 345.67, 0, 192)
+    # totalizer: DeviceVariable = DeviceVariable(241, 4567.8, 0, 192)
+    # level: DeviceVariable = DeviceVariable(45, 5.6789, 0, 192)
+    # volume: DeviceVariable = DeviceVariable(41, 67.890, 0, 192)
+    # dict[int, DeviceVariable]
+    # {
+    #     0: pressure,
+    #     1: temperature,
+    #     2: flow,
+    #     3: totalizer,
+    #     4: level,
+    #     5: volume,
+    # }
     # Dynamic variables
-    pv_units: U8 = U8(12)
-    pv_value: F32 = F32(1.2345)
-    pv_classification: U8 = U8(65)
-    sv_units: U8 = U8(32)
-    sv_value: F32 = F32(23.4567)
-    sv_classification: U8 = U8()
-    tv_units: U8 = U8(240)
-    tv_value: F32 = F32(345)
-    tv_classification: U8 = U8()
-    qv_units: U8 = U8(12)
-    qv_value: F32 = F32(1.2345)
-    qv_classification: U8 = U8()
+    # dict[int, int]
+    # {
+    #     0: 0,
+    #     1: 1,
+    #     2: 2,
+    #     3: 3,
+    # }

@@ -4,7 +4,7 @@ import time
 from .config import Configuration
 from .framingutils import FrameType, HartFrame, HartFrameBuilder
 from .commands import handle_request
-from .devices import HartDevice
+from .devices import DeviceVariable, HartDevice
 from .payloads import U8, U16, U24, Ascii, PackedAscii
 
 config = Configuration()
@@ -24,6 +24,20 @@ print(f'Listening {config.port}')
 frameBuilder = HartFrameBuilder()
 
 device3051 = HartDevice(
+    device_variables={
+        0: DeviceVariable(12, 1.2345, 65, 192),
+        1: DeviceVariable(32, 23.456, 0, 192),
+        2: DeviceVariable(241, 345.67, 0, 192),
+        3: DeviceVariable(241, 4567.8, 0, 192),
+        4: DeviceVariable(45, 5.6789, 0, 192),
+        5: DeviceVariable(41, 67.890, 0, 192),
+    },
+    dynamic_variables={
+        0: 0,
+        1: 1,
+        2: 2,
+        3: 3,
+    },
     polling_address=U8(0),
     long_address=0x3FFFFFFFFF & 0x2606123456,
     expanded_device_type=U16(0x2606),
@@ -32,6 +46,16 @@ device3051 = HartDevice(
     hart_long_tag=Ascii(32, "This is 3051 rev 10             "))
 
 device150 = HartDevice(
+    device_variables={
+        0: DeviceVariable(12, 1.2345, 65, 192),
+        1: DeviceVariable(32, 23.456, 0, 192)
+    },
+    dynamic_variables={
+        0: 0,
+        1: 1,
+        2: 1,
+        3: 1,
+    },
     universal_revision=U8(5),
     polling_address=U8(1),
     long_address=0x3FFFFFFFFF & 0x9979789ABC,
