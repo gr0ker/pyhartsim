@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import random
 from .payloads import F32, U16, U24, U32, U8, Ascii, GreedyU8Array, PackedAscii
 from .payloads import PayloadSequence
 from .devices import HartDevice
@@ -112,7 +113,7 @@ class Cmd1Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
     pv_units: U8 = U8()
-    pv_value: F32 = F32()
+    pv_value: F32 = F32(random.random())
 
     @classmethod
     def create(cls, device: HartDevice):
@@ -127,7 +128,7 @@ class Cmd2Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
     loop_current: U8 = U8()
-    percent_of_range: F32 = F32()
+    percent_of_range: F32 = F32(random.random())
 
     @classmethod
     def create(cls, device: HartDevice):
@@ -141,15 +142,15 @@ class Cmd2Reply (PayloadSequence):
 class Cmd3Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    loop_current: F32 = F32()
+    loop_current: F32 = F32(random.random())
     pv_units: U8 = U8()
-    pv_value: F32 = F32()
+    pv_value: F32 = F32(random.random())
     sv_units: U8 = U8()
-    sv_value: F32 = F32()
+    sv_value: F32 = F32(random.random())
     tv_units: U8 = U8()
-    tv_value: F32 = F32()
+    tv_value: F32 = F32(random.random())
     qv_units: U8 = U8()
-    qv_value: F32 = F32()
+    qv_value: F32 = F32(random.random())
 
     @classmethod
     def create(cls, device: HartDevice):
@@ -219,42 +220,42 @@ class Cmd9Reply (PayloadSequence):
     device_variable_code_1: U8 = U8()
     device_variable_classification_1: U8 = U8()
     device_variable_units_1: U8 = U8()
-    device_variable_value_1: F32 = F32()
+    device_variable_value_1: F32 = F32(random.random())
     device_variable_status_1: U8 = U8()
     device_variable_code_2: U8 = U8(is_optional=True)
     device_variable_classification_2: U8 = U8(is_optional=True)
     device_variable_units_2: U8 = U8(is_optional=True)
-    device_variable_value_2: F32 = F32(is_optional=True)
+    device_variable_value_2: F32 = F32(random.random(), is_optional=True)
     device_variable_status_2: U8 = U8(is_optional=True)
     device_variable_code_3: U8 = U8(is_optional=True)
     device_variable_classification_3: U8 = U8(is_optional=True)
     device_variable_units_3: U8 = U8(is_optional=True)
-    device_variable_value_3: F32 = F32(is_optional=True)
+    device_variable_value_3: F32 = F32(random.random(), is_optional=True)
     device_variable_status_3: U8 = U8(is_optional=True)
     device_variable_code_4: U8 = U8(is_optional=True)
     device_variable_classification_4: U8 = U8(is_optional=True)
     device_variable_units_4: U8 = U8(is_optional=True)
-    device_variable_value_4: F32 = F32(is_optional=True)
+    device_variable_value_4: F32 = F32(random.random(), is_optional=True)
     device_variable_status_4: U8 = U8(is_optional=True)
     device_variable_code_5: U8 = U8(is_optional=True)
     device_variable_classification_5: U8 = U8(is_optional=True)
     device_variable_units_5: U8 = U8(is_optional=True)
-    device_variable_value_5: F32 = F32(is_optional=True)
+    device_variable_value_5: F32 = F32(random.random(), is_optional=True)
     device_variable_status_5: U8 = U8(is_optional=True)
     device_variable_code_6: U8 = U8(is_optional=True)
     device_variable_classification_6: U8 = U8(is_optional=True)
     device_variable_units_6: U8 = U8(is_optional=True)
-    device_variable_value_6: F32 = F32(is_optional=True)
+    device_variable_value_6: F32 = F32(random.random(), is_optional=True)
     device_variable_status_6: U8 = U8(is_optional=True)
     device_variable_code_7: U8 = U8(is_optional=True)
     device_variable_classification_7: U8 = U8(is_optional=True)
     device_variable_units_7: U8 = U8(is_optional=True)
-    device_variable_value_7: F32 = F32(is_optional=True)
+    device_variable_value_7: F32 = F32(random.random(), is_optional=True)
     device_variable_status_7: U8 = U8(is_optional=True)
     device_variable_code_8: U8 = U8(is_optional=True)
     device_variable_classification_8: U8 = U8(is_optional=True)
     device_variable_units_8: U8 = U8(is_optional=True)
-    device_variable_value_8: F32 = F32(is_optional=True)
+    device_variable_value_8: F32 = F32(random.random(), is_optional=True)
     device_variable_status_8: U8 = U8(is_optional=True)
     timestamp: U32 = U32()
 
