@@ -2,6 +2,7 @@ from abc import abstractmethod
 from functools import reduce
 from itertools import repeat
 from math import ceil, floor
+import random
 import struct
 from typing import Iterator
 
@@ -137,7 +138,7 @@ class F32(Payload):
         return self.__size
 
     def get_value(self):
-        return self.__value
+        return self.__value + random.random() / 2
 
     def set_value(self, value):
         self.__value = value
