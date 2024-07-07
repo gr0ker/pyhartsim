@@ -5,6 +5,7 @@ from .payloads import F32, U16, U24, U8, Ascii, PackedAscii
 @dataclass
 class DeviceVariable:
     units: U8 = U8()
+    alternate_units: U8 = U8()
     value: F32 = F32()
     classification: U8 = U8()
     status: U8 = U8()

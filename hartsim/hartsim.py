@@ -5,7 +5,7 @@ from .config import Configuration
 from .framingutils import FrameType, HartFrame, HartFrameBuilder
 from .commands import handle_request
 from .devices import DeviceVariable, HartDevice
-from .payloads import U8, U16, U24, Ascii, PackedAscii
+from .payloads import F32, U8, U16, U24, Ascii, PackedAscii
 
 config = Configuration()
 
@@ -25,12 +25,22 @@ frameBuilder = HartFrameBuilder()
 
 device3051 = HartDevice(
     device_variables={
-        0: DeviceVariable(12, 1.2345, 65, 192),
-        1: DeviceVariable(32, 23.456, 0, 192),
-        2: DeviceVariable(241, 345.67, 0, 192),
-        3: DeviceVariable(241, 4567.8, 0, 192),
-        4: DeviceVariable(45, 5.6789, 0, 192),
-        5: DeviceVariable(41, 67.890, 0, 192),
+        0: DeviceVariable(U8(12), U8(12), F32(1.2345), U8(65), U8(192)),
+        1: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
+        2: DeviceVariable(U8(244), U8(244), F32(45.67), U8(0), U8(192)),
+        3: DeviceVariable(U8(242), U8(242), F32(4567.8), U8(0), U8(192)),
+        4: DeviceVariable(U8(45), U8(45), F32(5.6789), U8(0), U8(192)),
+        5: DeviceVariable(U8(41), U8(41), F32(67.890), U8(0), U8(192)),
+        6: DeviceVariable(U8(244), U8(244), F32(67.890), U8(0), U8(192)),
+        7: DeviceVariable(U8(244), U8(244), F32(67.890), U8(0), U8(192)),
+        8: DeviceVariable(U8(244), U8(244), F32(67.890), U8(0), U8(192)),
+        9: DeviceVariable(U8(244), U8(244), F32(67.890), U8(0), U8(192)),
+        244: DeviceVariable(U8(57), U8(57), F32(56.7890), U8(0), U8(192)),
+        245: DeviceVariable(U8(39), U8(39), F32(4.5678), U8(0), U8(192)),
+        246: DeviceVariable(U8(12), U8(12), F32(1.2345), U8(65), U8(192)),
+        247: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
+        248: DeviceVariable(U8(241), U8(241), F32(345.67), U8(0), U8(192)),
+        249: DeviceVariable(U8(244), U8(244), F32(4567.8), U8(0), U8(192)),
     },
     dynamic_variables={
         0: 0,
@@ -39,16 +49,25 @@ device3051 = HartDevice(
         3: 3,
     },
     polling_address=U8(0),
-    long_address=0x3FFFFFFFFF & 0x2606123456,
-    expanded_device_type=U16(0x2606),
+    # long_address=0x3FFFFFFFFF & 0x268F123456,
+    # expanded_device_type=U16(0x268F),
+    long_address=0x3FFFFFFFFF & 0x9972123456,
+    expanded_device_type=U16(0x9972),
     device_id=U24(0x123456),
     hart_tag=PackedAscii(8, "3051 r10"),
-    hart_long_tag=Ascii(32, "This is 3051 rev 10             "))
+    hart_long_tag=Ascii(32, "This is 3051 rev 10             "),
+    device_status=U8(0x10))
 
 device150 = HartDevice(
     device_variables={
-        0: DeviceVariable(12, 1.2345, 65, 192),
-        1: DeviceVariable(32, 23.456, 0, 192)
+        0: DeviceVariable(U8(12), U8(12), F32(1.2345), U8(65), U8(192)),
+        1: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
+        244: DeviceVariable(U8(57), U8(57), F32(56.7890), U8(0), U8(192)),
+        245: DeviceVariable(U8(39), U8(39), F32(4.5678), U8(0), U8(192)),
+        246: DeviceVariable(U8(12), U8(12), F32(1.2345), U8(65), U8(192)),
+        247: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
+        248: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
+        249: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
     },
     dynamic_variables={
         0: 0,
@@ -79,6 +98,8 @@ for short_address in poll_map:
         f'  Address #{short_address}: \
 Type=0x{poll_map[short_address].expanded_device_type.get_value():04X}, \
 ID=0x{poll_map[short_address].device_id.get_value():06X}')
+
+port.flush()
 
 while True:
     if port.in_waiting:
