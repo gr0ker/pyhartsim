@@ -3,4 +3,4 @@ from dataclasses import dataclass
 
 @dataclass
 class Configuration:
-    port: str = "COM3"
+    port: str = "COM2"

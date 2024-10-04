@@ -37,8 +37,40 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd12Reply.create(device)
     elif command_number == 13:
         payload = Cmd13Reply.create(device)
+    elif command_number == 15:
+        payload = Cmd15Reply.create(device)
     elif command_number == 20 and device.universal_revision.get_value() >= 6:
         payload = Cmd20Reply.create(device)
+    elif command_number == 48:
+        payload = Cmd48Reply.create(device)
+    elif command_number == 76:
+        payload = Cmd76Reply.create(device)
+    elif command_number == 90:
+        payload = Cmd90Reply.create(device)
+    elif command_number == 105:
+        payload = Cmd105Reply.create(device)
+    elif command_number == 128:
+        payload = Cmd128Reply.create(device)
+    elif command_number == 133:
+        payload = Cmd133Reply.create(device)
+    elif command_number == 148:
+        payload = Cmd148Reply.create(device)
+    elif command_number == 160:
+        payload = Cmd160Reply.create(device)
+    elif command_number == 161:
+        payload = Cmd161Reply.create(device)
+    elif command_number == 162:
+        payload = Cmd162Reply.create(device)
+    elif command_number == 216:
+        payload = Cmd216Reply.create(device)
+    elif command_number == 217:
+        payload = Cmd217Reply.create(device)
+    elif command_number == 218:
+        payload = Cmd218Reply.create(device)
+    elif command_number == 220:
+        payload = Cmd220Reply.create(device)
+    elif command_number == 222:
+        payload = Cmd222Reply.create(device)
     else:
         payload = ErrorReply.create(device, U8(64))
 
@@ -62,7 +94,7 @@ class Cmd0Hart5Reply (PayloadSequence):
     expanded_device_type: U16 = U16()
     request_preambles: U8 = U8(5)
     universal_revision: U8 = U8(5)
-    device_revision: U8 = U8(10)
+    device_revision: U8 = U8(11)
     software_revision: U8 = U8(3)
     hardware_revision_signaling_code: U8 = U8(0x64)
     flags: U8 = U8()
@@ -84,7 +116,7 @@ class Cmd0Hart7Reply (PayloadSequence):
     expanded_device_type: U16 = U16()
     request_preambles: U8 = U8(5)
     universal_revision: U8 = U8(7)
-    device_revision: U8 = U8(10)
+    device_revision: U8 = U8(7)
     software_revision: U8 = U8(3)
     hardware_revision_signaling_code: U8 = U8(0x64)
     flags: U8 = U8()
@@ -93,8 +125,8 @@ class Cmd0Hart7Reply (PayloadSequence):
     max_device_variables: U8 = U8(1)
     config_change_counter: U16 = U16()
     extended_device_status: U8 = U8()
-    manufacturer_code: U16 = U16(0x0026)
-    private_label_distributor: U16 = U16(0x0026)
+    manufacturer_code: U16 = U16(0x0099)
+    private_label_distributor: U16 = U16(0x0099)
     device_profile: U8 = U8()
 
     @classmethod
@@ -118,8 +150,8 @@ class Cmd1Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status,
-            pv_units=device.pv_units,
-            pv_value=device.pv_value)
+            pv_units=device.device_variables[device.dynamic_variables[0]].units,
+            pv_value=device.device_variables[device.dynamic_variables[0]].value,)
 
 
 @dataclass
@@ -155,14 +187,15 @@ class Cmd3Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status,
-            pv_units=device.pv_units,
-            pv_value=device.pv_value,
-            sv_units=device.sv_units,
-            sv_value=device.sv_value,
-            tv_units=device.tv_units,
-            tv_value=device.tv_value,
-            qv_units=device.qv_units,
-            qv_value=device.qv_value)
+            loop_current=device.loop_current,
+            pv_units=device.device_variables[device.dynamic_variables[0]].units,
+            pv_value=device.device_variables[device.dynamic_variables[0]].value,
+            sv_units=device.device_variables[device.dynamic_variables[1]].units,
+            sv_value=device.device_variables[device.dynamic_variables[1]].value,
+            tv_units=device.device_variables[device.dynamic_variables[2]].units,
+            tv_value=device.device_variables[device.dynamic_variables[2]].value,
+            qv_units=device.device_variables[device.dynamic_variables[3]].units,
+            qv_value=device.device_variables[device.dynamic_variables[3]].value)
 
 
 @dataclass
@@ -193,10 +226,10 @@ class Cmd8Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status,
-            pv_classification=device.pv_classification,
-            sv_classification=device.sv_classification,
-            tv_classification=device.tv_classification,
-            qv_classification=device.qv_classification)
+            pv_classification=device.device_variables[device.dynamic_variables[0]].classification,
+            sv_classification=device.device_variables[device.dynamic_variables[1]].classification,
+            tv_classification=device.device_variables[device.dynamic_variables[2]].classification,
+            qv_classification=device.device_variables[device.dynamic_variables[3]].classification)
 
 
 @dataclass
@@ -266,6 +299,23 @@ class Cmd9Reply (PayloadSequence):
 
         payload.device_variable_code_1.set_value(
             request.device_variable_code_1.get_value())
+
+        payload.device_variable_classification_1.set_value(
+            device.device_variables[request.device_variable_code_1.get_value()].classification.get_value())
+        payload.device_variable_units_1.set_value(
+            device.device_variables[request.device_variable_code_1.get_value()].units.get_value())
+        payload.device_variable_value_1.set_value(
+            device.device_variables[request.device_variable_code_1.get_value()].value.get_value())
+        payload.device_variable_status_1.set_value(
+            device.device_variables[request.device_variable_code_1.get_value()].status.get_value())
+
+        new_units = device.device_variables[request.device_variable_code_1.get_value(
+        )].alternate_units.get_value()
+        device.device_variables[request.device_variable_code_1.get_value()].alternate_units.set_value(
+            device.device_variables[request.device_variable_code_1.get_value()].units.get_value())
+        device.device_variables[request.device_variable_code_1.get_value(
+        )].units.set_value(new_units)
+
         if request.device_variable_code_2.is_skipped():
             payload.device_variable_code_2.skip()
             payload.device_variable_classification_2.skip()
@@ -277,9 +327,24 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_2.get_value())
             payload.device_variable_code_2.include()
             payload.device_variable_classification_2.include()
+            payload.device_variable_classification_2.set_value(
+                device.device_variables[request.device_variable_code_2.get_value()].classification.get_value())
             payload.device_variable_units_2.include()
+            payload.device_variable_units_2.set_value(
+                device.device_variables[request.device_variable_code_2.get_value()].units.get_value())
             payload.device_variable_value_2.include()
+            payload.device_variable_value_2.set_value(
+                device.device_variables[request.device_variable_code_2.get_value()].value.get_value())
             payload.device_variable_status_2.include()
+            payload.device_variable_status_2.set_value(
+                device.device_variables[request.device_variable_code_2.get_value()].status.get_value())
+
+            new_units = device.device_variables\
+                [request.device_variable_code_2.get_value()].alternate_units.get_value()
+            device.device_variables[request.device_variable_code_2.get_value()].alternate_units.set_value(
+                device.device_variables[request.device_variable_code_2.get_value()].units.get_value())
+            device.device_variables[request.device_variable_code_2.get_value(
+            )].units.set_value(new_units)
         if request.device_variable_code_3.is_skipped():
             payload.device_variable_code_3.skip()
             payload.device_variable_classification_3.skip()
@@ -291,9 +356,24 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_3.get_value())
             payload.device_variable_code_3.include()
             payload.device_variable_classification_3.include()
+            payload.device_variable_classification_3.set_value(
+                device.device_variables[request.device_variable_code_3.get_value()].classification.get_value())
             payload.device_variable_units_3.include()
+            payload.device_variable_units_3.set_value(
+                device.device_variables[request.device_variable_code_3.get_value()].units.get_value())
             payload.device_variable_value_3.include()
+            payload.device_variable_value_3.set_value(
+                device.device_variables[request.device_variable_code_3.get_value()].value.get_value())
             payload.device_variable_status_3.include()
+            payload.device_variable_status_3.set_value(
+                device.device_variables[request.device_variable_code_3.get_value()].status.get_value())
+
+            new_units = device.device_variables\
+                [request.device_variable_code_3.get_value()].alternate_units.get_value()
+            device.device_variables[request.device_variable_code_3.get_value()].alternate_units.set_value(
+                device.device_variables[request.device_variable_code_3.get_value()].units.get_value())
+            device.device_variables[request.device_variable_code_3.get_value(
+            )].units.set_value(new_units)
         if request.device_variable_code_4.is_skipped():
             payload.device_variable_code_4.skip()
             payload.device_variable_classification_4.skip()
@@ -305,9 +385,24 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_4.get_value())
             payload.device_variable_code_4.include()
             payload.device_variable_classification_4.include()
+            payload.device_variable_classification_4.set_value(
+                device.device_variables[request.device_variable_code_4.get_value()].classification.get_value())
             payload.device_variable_units_4.include()
+            payload.device_variable_units_4.set_value(
+                device.device_variables[request.device_variable_code_4.get_value()].units.get_value())
             payload.device_variable_value_4.include()
+            payload.device_variable_value_4.set_value(
+                device.device_variables[request.device_variable_code_4.get_value()].value.get_value())
             payload.device_variable_status_4.include()
+            payload.device_variable_status_4.set_value(
+                device.device_variables[request.device_variable_code_4.get_value()].status.get_value())
+
+            new_units = device.device_variables\
+                [request.device_variable_code_4.get_value()].alternate_units.get_value()
+            device.device_variables[request.device_variable_code_4.get_value()].alternate_units.set_value(
+                device.device_variables[request.device_variable_code_4.get_value()].units.get_value())
+            device.device_variables[request.device_variable_code_4.get_value(
+            )].units.set_value(new_units)
         if request.device_variable_code_5.is_skipped():
             payload.device_variable_code_5.skip()
             payload.device_variable_classification_5.skip()
@@ -319,9 +414,24 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_5.get_value())
             payload.device_variable_code_5.include()
             payload.device_variable_classification_5.include()
+            payload.device_variable_classification_5.set_value(
+                device.device_variables[request.device_variable_code_5.get_value()].classification.get_value())
             payload.device_variable_units_5.include()
+            payload.device_variable_units_5.set_value(
+                device.device_variables[request.device_variable_code_5.get_value()].units.get_value())
             payload.device_variable_value_5.include()
+            payload.device_variable_value_5.set_value(
+                device.device_variables[request.device_variable_code_5.get_value()].value.get_value())
             payload.device_variable_status_5.include()
+            payload.device_variable_status_5.set_value(
+                device.device_variables[request.device_variable_code_5.get_value()].status.get_value())
+
+            new_units = device.device_variables\
+                [request.device_variable_code_5.get_value()].alternate_units.get_value()
+            device.device_variables[request.device_variable_code_5.get_value()].alternate_units.set_value(
+                device.device_variables[request.device_variable_code_5.get_value()].units.get_value())
+            device.device_variables[request.device_variable_code_5.get_value(
+            )].units.set_value(new_units)
         if request.device_variable_code_6.is_skipped():
             payload.device_variable_code_6.skip()
             payload.device_variable_classification_6.skip()
@@ -333,9 +443,24 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_6.get_value())
             payload.device_variable_code_6.include()
             payload.device_variable_classification_6.include()
+            payload.device_variable_classification_6.set_value(
+                device.device_variables[request.device_variable_code_6.get_value()].classification.get_value())
             payload.device_variable_units_6.include()
+            payload.device_variable_units_6.set_value(
+                device.device_variables[request.device_variable_code_6.get_value()].units.get_value())
             payload.device_variable_value_6.include()
+            payload.device_variable_value_6.set_value(
+                device.device_variables[request.device_variable_code_6.get_value()].value.get_value())
             payload.device_variable_status_6.include()
+            payload.device_variable_status_6.set_value(
+                device.device_variables[request.device_variable_code_6.get_value()].status.get_value())
+
+            new_units = device.device_variables\
+                [request.device_variable_code_6.get_value()].alternate_units.get_value()
+            device.device_variables[request.device_variable_code_6.get_value()].alternate_units.set_value(
+                device.device_variables[request.device_variable_code_6.get_value()].units.get_value())
+            device.device_variables[request.device_variable_code_6.get_value(
+            )].units.set_value(new_units)
         if request.device_variable_code_7.is_skipped():
             payload.device_variable_code_7.skip()
             payload.device_variable_classification_7.skip()
@@ -347,9 +472,24 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_7.get_value())
             payload.device_variable_code_7.include()
             payload.device_variable_classification_7.include()
+            payload.device_variable_classification_7.set_value(
+                device.device_variables[request.device_variable_code_7.get_value()].classification.get_value())
             payload.device_variable_units_7.include()
+            payload.device_variable_units_7.set_value(
+                device.device_variables[request.device_variable_code_7.get_value()].units.get_value())
             payload.device_variable_value_7.include()
+            payload.device_variable_value_7.set_value(
+                device.device_variables[request.device_variable_code_7.get_value()].value.get_value())
             payload.device_variable_status_7.include()
+            payload.device_variable_status_7.set_value(
+                device.device_variables[request.device_variable_code_7.get_value()].status.get_value())
+
+            new_units = device.device_variables\
+                [request.device_variable_code_7.get_value()].alternate_units.get_value()
+            device.device_variables[request.device_variable_code_7.get_value()].alternate_units.set_value(
+                device.device_variables[request.device_variable_code_7.get_value()].units.get_value())
+            device.device_variables[request.device_variable_code_7.get_value(
+            )].units.set_value(new_units)
         if request.device_variable_code_8.is_skipped():
             payload.device_variable_code_8.skip()
             payload.device_variable_classification_8.skip()
@@ -361,9 +501,24 @@ class Cmd9Reply (PayloadSequence):
                 request.device_variable_code_8.get_value())
             payload.device_variable_code_8.include()
             payload.device_variable_classification_8.include()
+            payload.device_variable_classification_8.set_value(
+                device.device_variables[request.device_variable_code_8.get_value()].classification.get_value())
             payload.device_variable_units_8.include()
+            payload.device_variable_units_8.set_value(
+                device.device_variables[request.device_variable_code_8.get_value()].units.get_value())
             payload.device_variable_value_8.include()
+            payload.device_variable_value_8.set_value(
+                device.device_variables[request.device_variable_code_8.get_value()].value.get_value())
             payload.device_variable_status_8.include()
+            payload.device_variable_status_8.set_value(
+                device.device_variables[request.device_variable_code_8.get_value()].status.get_value())
+
+            new_units = device.device_variables\
+                [request.device_variable_code_8.get_value()].alternate_units.get_value()
+            device.device_variables[request.device_variable_code_8.get_value()].alternate_units.set_value(
+                device.device_variables[request.device_variable_code_8.get_value()].units.get_value())
+            device.device_variables[request.device_variable_code_8.get_value(
+            )].units.set_value(new_units)
 
         return payload
 
@@ -399,6 +554,22 @@ class Cmd13Reply (PayloadSequence):
 
 
 @dataclass
+class Cmd15Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: U32 = U32()
+    reserved_1: U32 = U32()
+    reserved_2: U32 = U32()
+    reserved_3: U32 = U32()
+    reserved_4: U24 = U24()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
 class Cmd20Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
@@ -409,6 +580,237 @@ class Cmd20Reply (PayloadSequence):
         return cls(
             device_status=device.device_status,
             long_tag=device.hart_long_tag)
+
+
+@dataclass
+class Cmd48Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    device_specific_status_0: U8 = U8()
+    device_specific_status_1: U8 = U8()
+    device_specific_status_2: U8 = U8()
+    device_specific_status_3: U8 = U8(0x10)
+    device_specific_status_4: U8 = U8()
+    device_specific_status_5: U8 = U8()
+    extended_fld_device_status: U8 = U8()
+    reserved_0: U8 = U8()
+    reserved_1: U8 = U8()
+    reserved_2: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        payload = cls(
+            device_status=device.device_status)
+
+        payload.device_specific_status_0.set_value(
+            device.device_specific_status_0.get_value())
+
+        new_device_specific_status_0 = device.alternate_device_specific_status_0\
+            .get_value()
+        device.alternate_device_specific_status_0.set_value(
+            device.device_specific_status_0.get_value())
+        device.device_specific_status_0.set_value(new_device_specific_status_0)
+
+        return payload
+
+
+@dataclass
+class Cmd76Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    lock_status: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd90Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    year: U8 = U8()
+    current_time: U32 = U32()
+    day_clock_last_set: U8 = U8()
+    month_clock_last_set: U8 = U8()
+    year_clock_last_set: U8 = U8()
+    time_clock_last_set: U32 = U32()
+    rtc_flags: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd105Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    burst_mode_control_code: U8 = U8()
+    burst_command_number_expansion_flag: U8 = U8()
+    device_variable_code_slot_0: U8 = U8()
+    device_variable_code_slot_1: U8 = U8()
+    device_variable_code_slot_2: U8 = U8()
+    device_variable_code_slot_3: U8 = U8()
+    device_variable_code_slot_4: U8 = U8()
+    device_variable_code_slot_5: U8 = U8()
+    device_variable_code_slot_6: U8 = U8()
+    device_variable_code_slot_7: U8 = U8()
+    burst_message: U8 = U8()
+    number_of_burst_messages: U8 = U8()
+    extended_command_number: U16 = U16()
+    update_period: U32 = U32()
+    maximum_update_period: U32 = U32()
+    burst_trigger_mode: U8 = U8()
+    classification: U8 = U8()
+    units_code: U8 = U8()
+    trigger_level: F32 = U32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd128Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: Ascii = Ascii(31)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd133Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: U24 = U24()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd148Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: PackedAscii = PackedAscii(32)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd160Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: PackedAscii = PackedAscii(32)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd161Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: Ascii = Ascii(3)
+    tank_type: U8 = U8(5)  # custom
+    reserved_1: Ascii = Ascii(12)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd162Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: Ascii = Ascii(83)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd216Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: U32 = U32()
+    reserved_1: U32 = U32()
+    reserved_2: U32 = U32()
+    reserved_3: U32 = U32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd217Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: U32 = U32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd218Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: U32 = U32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd220Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: U32 = U32()
+    reserved_1: U32 = U32()
+    reserved_2: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
+class Cmd222Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: U32 = U32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
 
 
 @dataclass
