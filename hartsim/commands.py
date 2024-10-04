@@ -58,6 +58,8 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd148Reply.create(device)
     elif command_number == 160:
         payload = Cmd160Reply.create(device)
+    elif command_number == 161:
+        payload = Cmd161Reply.create(device)
     elif command_number == 162:
         payload = Cmd162Reply.create(device)
     elif command_number == 216:
@@ -598,8 +600,18 @@ class Cmd48Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
-        return cls(
+        payload = cls(
             device_status=device.device_status)
+
+        payload.device_specific_status_0.set_value(
+            device.device_specific_status_0.get_value())
+
+        new_device_specific_status_0 = device.alternate_device_specific_status_0.get_value()
+        device.alternate_device_specific_status_0.set_value(
+            device.device_specific_status_0.get_value())
+        device.device_specific_status_0.set_value(new_device_specific_status_0)
+
+        return payload
 
 
 @dataclass
@@ -666,13 +678,7 @@ class Cmd105Reply (PayloadSequence):
 class Cmd128Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: U32 = U32()
-    reserved_1: U32 = U32()
-    reserved_2: U32 = U32()
-    reserved_3: U32 = U32()
-    reserved_4: U32 = U32()
-    reserved_5: U32 = U32()
-    reserved_6: U16 = U16()
+    reserved_0: Ascii = Ascii(31)
 
     @classmethod
     def create(cls, device: HartDevice):
@@ -717,10 +723,24 @@ class Cmd160Reply (PayloadSequence):
 
 
 @dataclass
+class Cmd161Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: Ascii = Ascii(3)
+    tank_type: U8 = U8(5)  # custom
+    reserved_1: Ascii = Ascii(12)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+
+@dataclass
 class Cmd162Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: PackedAscii = PackedAscii(32)
+    reserved_0: Ascii = Ascii(83)
 
     @classmethod
     def create(cls, device: HartDevice):
