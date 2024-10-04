@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import random
 from .payloads import F32, U16, U24, U32, U8, Ascii, GreedyU8Array, PackedAscii
 from .payloads import PayloadSequence
 from .devices import HartDevice
@@ -340,8 +339,8 @@ class Cmd9Reply (PayloadSequence):
             payload.device_variable_status_2.set_value(
                 device.device_variables[request.device_variable_code_2.get_value()].status.get_value())
 
-            new_units = device.device_variables[request.device_variable_code_2.get_value(
-            )].alternate_units.get_value()
+            new_units = device.device_variables\
+                [request.device_variable_code_2.get_value()].alternate_units.get_value()
             device.device_variables[request.device_variable_code_2.get_value()].alternate_units.set_value(
                 device.device_variables[request.device_variable_code_2.get_value()].units.get_value())
             device.device_variables[request.device_variable_code_2.get_value(
@@ -369,8 +368,8 @@ class Cmd9Reply (PayloadSequence):
             payload.device_variable_status_3.set_value(
                 device.device_variables[request.device_variable_code_3.get_value()].status.get_value())
 
-            new_units = device.device_variables[request.device_variable_code_3.get_value(
-            )].alternate_units.get_value()
+            new_units = device.device_variables\
+                [request.device_variable_code_3.get_value()].alternate_units.get_value()
             device.device_variables[request.device_variable_code_3.get_value()].alternate_units.set_value(
                 device.device_variables[request.device_variable_code_3.get_value()].units.get_value())
             device.device_variables[request.device_variable_code_3.get_value(
@@ -398,8 +397,8 @@ class Cmd9Reply (PayloadSequence):
             payload.device_variable_status_4.set_value(
                 device.device_variables[request.device_variable_code_4.get_value()].status.get_value())
 
-            new_units = device.device_variables[request.device_variable_code_4.get_value(
-            )].alternate_units.get_value()
+            new_units = device.device_variables\
+                [request.device_variable_code_4.get_value()].alternate_units.get_value()
             device.device_variables[request.device_variable_code_4.get_value()].alternate_units.set_value(
                 device.device_variables[request.device_variable_code_4.get_value()].units.get_value())
             device.device_variables[request.device_variable_code_4.get_value(
@@ -427,8 +426,8 @@ class Cmd9Reply (PayloadSequence):
             payload.device_variable_status_5.set_value(
                 device.device_variables[request.device_variable_code_5.get_value()].status.get_value())
 
-            new_units = device.device_variables[request.device_variable_code_5.get_value(
-            )].alternate_units.get_value()
+            new_units = device.device_variables\
+                [request.device_variable_code_5.get_value()].alternate_units.get_value()
             device.device_variables[request.device_variable_code_5.get_value()].alternate_units.set_value(
                 device.device_variables[request.device_variable_code_5.get_value()].units.get_value())
             device.device_variables[request.device_variable_code_5.get_value(
@@ -456,8 +455,8 @@ class Cmd9Reply (PayloadSequence):
             payload.device_variable_status_6.set_value(
                 device.device_variables[request.device_variable_code_6.get_value()].status.get_value())
 
-            new_units = device.device_variables[request.device_variable_code_6.get_value(
-            )].alternate_units.get_value()
+            new_units = device.device_variables\
+                [request.device_variable_code_6.get_value()].alternate_units.get_value()
             device.device_variables[request.device_variable_code_6.get_value()].alternate_units.set_value(
                 device.device_variables[request.device_variable_code_6.get_value()].units.get_value())
             device.device_variables[request.device_variable_code_6.get_value(
@@ -485,8 +484,8 @@ class Cmd9Reply (PayloadSequence):
             payload.device_variable_status_7.set_value(
                 device.device_variables[request.device_variable_code_7.get_value()].status.get_value())
 
-            new_units = device.device_variables[request.device_variable_code_7.get_value(
-            )].alternate_units.get_value()
+            new_units = device.device_variables\
+                [request.device_variable_code_7.get_value()].alternate_units.get_value()
             device.device_variables[request.device_variable_code_7.get_value()].alternate_units.set_value(
                 device.device_variables[request.device_variable_code_7.get_value()].units.get_value())
             device.device_variables[request.device_variable_code_7.get_value(
@@ -514,8 +513,8 @@ class Cmd9Reply (PayloadSequence):
             payload.device_variable_status_8.set_value(
                 device.device_variables[request.device_variable_code_8.get_value()].status.get_value())
 
-            new_units = device.device_variables[request.device_variable_code_8.get_value(
-            )].alternate_units.get_value()
+            new_units = device.device_variables\
+                [request.device_variable_code_8.get_value()].alternate_units.get_value()
             device.device_variables[request.device_variable_code_8.get_value()].alternate_units.set_value(
                 device.device_variables[request.device_variable_code_8.get_value()].units.get_value())
             device.device_variables[request.device_variable_code_8.get_value(
@@ -606,7 +605,8 @@ class Cmd48Reply (PayloadSequence):
         payload.device_specific_status_0.set_value(
             device.device_specific_status_0.get_value())
 
-        new_device_specific_status_0 = device.alternate_device_specific_status_0.get_value()
+        new_device_specific_status_0 = device.alternate_device_specific_status_0\
+            .get_value()
         device.alternate_device_specific_status_0.set_value(
             device.device_specific_status_0.get_value())
         device.device_specific_status_0.set_value(new_device_specific_status_0)
