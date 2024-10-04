@@ -2,7 +2,6 @@ from abc import abstractmethod
 from functools import reduce
 from itertools import repeat
 from math import ceil, floor
-import random
 import struct
 from typing import Iterator
 
