@@ -43,6 +43,12 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd20Reply.create(device)
     elif command_number == 48:
         payload = Cmd48Reply.create(device)
+    elif command_number == 54:
+        request = Cmd54Request()
+        request.deserialize(iter(data))
+        payload = Cmd54Reply.create(device, request)
+    elif command_number == 72:
+        payload = Cmd72Reply.create(device)
     elif command_number == 76:
         payload = Cmd76Reply.create(device)
     elif command_number == 90:
@@ -61,6 +67,8 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd161Reply.create(device)
     elif command_number == 162:
         payload = Cmd162Reply.create(device)
+    elif command_number == 177:
+        payload = Cmd177Reply.create(device)
     elif command_number == 216:
         payload = Cmd216Reply.create(device)
     elif command_number == 217:
@@ -613,6 +621,49 @@ class Cmd48Reply (PayloadSequence):
 
         return payload
 
+@dataclass
+class Cmd54Request (PayloadSequence):
+    device_variable_code: U8 = U8()
+
+
+@dataclass
+class Cmd54Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    device_variable_code: U8 = U8()
+    device_variable_sensor_serial_number: U24 = U24()
+    device_variable_units: U8 = U8()
+    device_variable_usl: F32 = F32()
+    device_variable_lsl: F32 = F32()
+    device_variable_damping: F32 = F32()
+    device_variable_min_span: F32 = F32()
+    device_variable_classification: U8 = U8()
+    device_variable_family: U8 = U8()
+    device_variable_update_period: U32 = U32()
+    device_variable_properties: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd54Request):
+        payload = cls(device_status=device.device_status)
+
+        payload.device_variable_code.set_value(
+            request.device_variable_code.get_value())
+
+        payload.device_variable_classification.set_value(
+            device.device_variables[request.device_variable_code.get_value()].classification.get_value())
+
+        return payload
+
+@dataclass
+class Cmd72Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    control_code: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
 
 @dataclass
 class Cmd76Reply (PayloadSequence):
@@ -726,7 +777,9 @@ class Cmd160Reply (PayloadSequence):
 class Cmd161Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: Ascii = Ascii(3)
+    levelUnits: U8 = U8()
+    volumeUnits: U8 = U8()
+    volumeSetupNumStrapReadPoints: U8 = U8(3)
     tank_type: U8 = U8(5)  # custom
     reserved_1: Ascii = Ascii(12)
 
@@ -747,6 +800,16 @@ class Cmd162Reply (PayloadSequence):
         return cls(
             device_status=device.device_status)
 
+@dataclass
+class Cmd177Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: Ascii = Ascii(86)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
 
 @dataclass
 class Cmd216Reply (PayloadSequence):
