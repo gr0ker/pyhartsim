@@ -1,0 +1,477 @@
+{
+  "variables": [
+    {
+      "name": "response_code",
+      "type": "U8"
+    },
+    {
+      "name": "device_status",
+      "type": "U8"
+    },
+    {
+      "name": "expanded_device_type",
+      "type": "U16"
+    },
+    {
+      "name": "request_preambles",
+      "type": "U8",
+      "value": 5
+    },
+    {
+      "name": "universal_revision",
+      "type": "U8",
+      "value": 7
+    },
+    {
+      "name": "device_revision",
+      "type": "U8",
+      "value": 7
+    },
+    {
+      "name": "software_revision",
+      "type": "U8",
+      "value": 3
+    },
+    {
+      "name": "hardware_revision_signaling_code",
+      "type": "U8",
+      "value": "0x64"
+    },
+    {
+      "name": "flags",
+      "type": "U8"
+    },
+    {
+      "name": "device_id",
+      "type": "U24"
+    },
+    {
+      "name": "response_preambles",
+      "type": "U8",
+      "value": 5
+    },
+    {
+      "name": "max_device_variables",
+      "type": "U8",
+      "value": 1
+    },
+    {
+      "name": "config_change_counter",
+      "type": "U16"
+    },
+    {
+      "name": "extended_device_status",
+      "type": "U8"
+    },
+    {
+      "name": "manufacturer_code",
+      "type": "U16",
+      "value": "0x0099"
+    },
+    {
+      "name": "private_label_distributor",
+      "type": "U16",
+      "value": "0x0099"
+    },
+    {
+      "name": "device_profile",
+      "type": "U8"
+    },
+    {
+      "name": "pressure_units",
+      "type": "U8"
+    },
+    {
+      "name": "pressure_value",
+      "type": "F32"
+    },
+    {
+      "name": "pressure_classification",
+      "type": "U8"
+    },
+    {
+      "name": "pressure_status",
+      "type": "U8"
+    },
+    {
+      "name": "temperature_units",
+      "type": "U8"
+    },
+    {
+      "name": "temperature_value",
+      "type": "F32"
+    },
+    {
+      "name": "temperature_classification",
+      "type": "U8"
+    },
+    {
+      "name": "temperature_status",
+      "type": "U8"
+    },
+    {
+      "name": "device_variable_code_1",
+      "type": "U8"
+    },
+    {
+      "name": "device_variable_code_2",
+      "type": "U8"
+    },
+    {
+      "name": "device_variable_code_3",
+      "type": "U8"
+    },
+    {
+      "name": "device_variable_code_4",
+      "type": "U8"
+    },
+    {
+      "name": "device_variable_code_5",
+      "type": "U8"
+    },
+    {
+      "name": "device_variable_code_6",
+      "type": "U8"
+    },
+    {
+      "name": "device_variable_code_7",
+      "type": "U8"
+    },
+    {
+      "name": "device_variable_code_8",
+      "type": "U8"
+    }
+  ],
+  "collections": [
+    {
+      "name": "pressure",
+      "items": [
+        {
+          "name": "units",
+          "reference": "pressure_units"
+        },
+        {
+          "name": "value",
+          "reference": "pressure_value"
+        },
+        {
+          "name": "classification",
+          "reference": "pressure_classification"
+        },
+        {
+          "name": "status",
+          "reference": "pressure_status"
+        }
+      ]
+    },
+    {
+      "name": "temperature",
+      "items": [
+        {
+          "name": "units",
+          "reference": "temperature_units"
+        },
+        {
+          "name": "value",
+          "reference": "temperature_value"
+        },
+        {
+          "name": "classification",
+          "reference": "temperature_classification"
+        },
+        {
+          "name": "status",
+          "reference": "temperature_status"
+        }
+      ]
+    }
+  ],
+  "arrays": [
+    {
+      "name": "device_variables",
+      "items": [
+        {
+          "index": 0,
+          "reference": "pressure"
+        },
+        {
+          "index": 1,
+          "reference": "temperature"
+        }
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "number": 0,
+      "request": [
+      ],
+      "reply": [
+        {
+          "reference": "response_code"
+        },
+        {
+          "reference": "device_status"
+        },
+        {
+          "constant": 254
+        },
+        {
+          "reference": "expanded_device_type"
+        },
+        {
+          "reference": "request_preambles"
+        },
+        {
+          "reference": "universal_revision"
+        },
+        {
+          "reference": "device_revision"
+        },
+        {
+          "reference": "software_revision"
+        },
+        {
+          "reference": "hardware_revision_signaling_code"
+        },
+        {
+          "reference": "flags"
+        },
+        {
+          "reference": "device_id"
+        },
+        {
+          "reference": "response_preambles"
+        },
+        {
+          "reference": "max_device_variables"
+        },
+        {
+          "reference": "config_change_counter"
+        },
+        {
+          "reference": "extended_device_status"
+        },
+        {
+          "reference": "manufacturer_code"
+        },
+        {
+          "reference": "private_label_distributor"
+        },
+        {
+          "reference": "device_profile"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "request": [
+        {
+          "name": "device_variable_code_1",
+          "is_index": true
+        },
+        {
+          "name": "device_variable_code_2",
+          "is_index": true,
+          "is_optional": true
+        },
+        {
+          "name": "device_variable_code_3",
+          "is_index": true,
+          "is_optional": true
+        },
+        {
+          "name": "device_variable_code_4",
+          "is_index": true,
+          "is_optional": true
+        },
+        {
+          "name": "device_variable_code_5",
+          "is_index": true,
+          "is_optional": true
+        },
+        {
+          "name": "device_variable_code_6",
+          "is_index": true,
+          "is_optional": true
+        },
+        {
+          "name": "device_variable_code_7",
+          "is_index": true,
+          "is_optional": true
+        },
+        {
+          "name": "device_variable_code_8",
+          "is_index": true,
+          "is_optional": true
+        }
+      ],
+      "reply": [
+        {
+          "reference": "response_code"
+        },
+        {
+          "reference": "device_status"
+        },
+        {
+          "reference": "extended_device_status"
+        },
+        {
+          "expression": "@device_variable_code_1"
+        },
+        {
+          "reference": "device_variables/@device_variable_code_1/classification"
+        },
+        {
+          "reference": "device_variables/@device_variable_code_1/units"
+        },
+        {
+          "reference": "device_variables/@device_variable_code_1/value"
+        },
+        {
+          "reference": "device_variables/@device_variable_code_1/status"
+        },
+        {
+          "expression": "@device_variable_code_2",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_2/classification",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_2/units",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_2/value",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_2/status",
+          "is_optional": true
+        },
+        {
+          "expression": "@device_variable_code_3",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_3/classification",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_3/units",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_3/value",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_3/status",
+          "is_optional": true
+        },
+        {
+          "expression": "@device_variable_code_4",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_4/classification",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_4/units",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_4/value",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_4/status",
+          "is_optional": true
+        },
+        {
+          "expression": "@device_variable_code_5",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_5/classification",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_5/units",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_5/value",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_5/status",
+          "is_optional": true
+        },
+        {
+          "expression": "@device_variable_code_6",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_6/classification",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_6/units",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_6/value",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_6/status",
+          "is_optional": true
+        },
+        {
+          "expression": "@device_variable_code_7",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_7/classification",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_7/units",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_7/value",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_7/status",
+          "is_optional": true
+        },
+        {
+          "expression": "@device_variable_code_8",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_8/classification",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_8/units",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_8/value",
+          "is_optional": true
+        },
+        {
+          "reference": "device_variables/@device_variable_code_8/status",
+          "is_optional": true
+        }
+      ]
+    }
+  ]
+}
