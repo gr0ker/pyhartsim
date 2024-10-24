@@ -1,3 +1,4 @@
+import json
 import serial
 import time
 
@@ -7,7 +8,13 @@ from .commands import handle_request
 from .devices import DeviceVariable, HartDevice
 from .payloads import F32, U8, U16, U24, Ascii, PackedAscii
 
-config = Configuration()
+config_file = open('config/config.json')
+try:
+    config_data = json.load(config_file)
+finally:
+    config_file.close()
+
+config = Configuration.from_dict(config_data)
 
 port = serial.Serial(config.port,
                      baudrate=1200,
