@@ -40,7 +40,7 @@ __NONE_NAME__ = 'NONE'
 
 class HartFrame:
     def __init__(self,
-                 type: FrameType,
+                 frame_type: FrameType,
                  command_number: int,
                  is_long_address: bool = False,
                  short_address: int = 0,
@@ -49,7 +49,7 @@ class HartFrame:
                  is_burst: bool = False,
                  data: bytearray = bytearray(),
                  check_sum: int = None):
-        self.type = type
+        self.type = frame_type
         self.command_number = command_number
         self.is_long_address = is_long_address
         self.short_address = short_address
@@ -185,6 +185,19 @@ class HartFrameBuilder:
     def __init__(self):
         self.__queue = []
         self.__reset__()
+        self.state = State.UNKNOWN
+        self.byte_count = 0
+        self.type = None
+        self.command_number = None
+        self.is_long_address = None
+        self.short_address = None
+        self.long_address = None
+        self.is_primary_master = None
+        self.is_burst = None
+        self.payload = None
+        self.check_sum = None
+        self.number_of_preambles = 0
+        self.long_address_length = 0
 
     def __reset__(self):
         self.state = State.UNKNOWN
@@ -201,7 +214,7 @@ class HartFrameBuilder:
         self.long_address_length = 0
 
     def collect(self, iterator: Iterator[int]) -> bool:
-        isNewFrameAvailable = False
+        is_new_frame_available = False
 
         for item in iterator:
             if self.state == State.UNKNOWN:
@@ -214,9 +227,9 @@ class HartFrameBuilder:
                     self.state = State.PREAMBLES
             elif self.state == State.PREAMBLES:
                 if item != 0xFF:
-                    maskedItem = item & DELIMITER_MASK
-                    if FrameType.has_value(maskedItem):
-                        self.type = FrameType(maskedItem)
+                    masked_item = item & DELIMITER_MASK
+                    if FrameType.has_value(masked_item):
+                        self.type = FrameType(masked_item)
                         self.is_long_address = (
                             item & LONG_ADDRESS_MASK) == LONG_ADDRESS_MASK
                         if self.is_long_address:
@@ -265,7 +278,7 @@ class HartFrameBuilder:
                     self.state = State.CHECK_SUM
             elif self.state == State.CHECK_SUM:
                 self.check_sum = item
-                newFrame = HartFrame(self.type,
+                new_frame = HartFrame(self.type,
                                      self.command_number,
                                      self.is_long_address,
                                      self.short_address,
@@ -274,12 +287,12 @@ class HartFrameBuilder:
                                      self.is_burst,
                                      self.payload,
                                      self.check_sum)
-                self.__queue.append(newFrame)
-                isNewFrameAvailable = True
+                self.__queue.append(new_frame)
+                is_new_frame_available = True
                 self.__reset__()
                 break
 
-        return isNewFrameAvailable
+        return is_new_frame_available
 
     def dequeue(self) -> HartFrame:
         return self.__queue.pop(0)

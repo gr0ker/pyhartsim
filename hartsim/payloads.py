@@ -44,6 +44,9 @@ class Payload:
         self._deserialize(iterator)
         self.include()
 
+    def serialize(self) -> bytearray:
+        return bytearray(self)
+
     @abstractmethod
     def __next__(self):
         raise StopIteration
@@ -73,7 +76,7 @@ class Unsigned(Payload):
             size
         self.__mask = reduce(lambda x, y: x << 8 | y,
                              repeat(FULL_BYTE_MASK, self.__size))
-        self.set_value(value)
+        self.__value = self.set_value(value)
         super().__init__(is_optional)
 
     def get_size(self):
@@ -86,13 +89,14 @@ class Unsigned(Payload):
         if value < 0:
             value = -value
         self.__value = value & self.__mask
+        return self.__value
 
     def __next__(self):
         if self._offset < self.__size:
-            next = (self.__value >> (BITS_IN_BYTE *
+            next_byte = (self.__value >> (BITS_IN_BYTE *
                     (self.__size - self._offset - 1))) & FULL_BYTE_MASK
             self._offset += 1
-            return next
+            return next_byte
         else:
             raise StopIteration
 
@@ -137,7 +141,7 @@ class F32(Payload):
                  is_optional: bool = False):
         value = float("nan") if value is None else value
         self.__size = FLOAT_SIZE
-        self.set_value(value)
+        self.__value = self.set_value(value)
         super().__init__(is_optional)
 
     def get_size(self):
@@ -148,6 +152,7 @@ class F32(Payload):
 
     def set_value(self, value):
         self.__value = value
+        return self.__value
 
     def __iter__(self):
         self.__serialized = struct.pack("f", self.__value)
@@ -156,9 +161,9 @@ class F32(Payload):
 
     def __next__(self):
         if self._offset < self.__size:
-            next = self.__serialized[self.__size - self._offset - 1]
+            next_byte = self.__serialized[self.__size - self._offset - 1]
             self._offset += 1
-            return next
+            return next_byte
         else:
             raise StopIteration
 
@@ -176,7 +181,7 @@ class Ascii(Payload):
                  is_optional: bool = False):
         value = "" if value is None else value
         self.__size = MIN_SIZE if size < MIN_SIZE else size
-        self.set_value(value)
+        self.__value = self.set_value(value)
         super().__init__(is_optional)
 
     def get_size(self):
@@ -186,20 +191,21 @@ class Ascii(Payload):
         return self.__value
 
     def set_value(self, value: str):
-        if (len(value) > self.__size):
+        if len(value) > self.__size:
             self.__value = value[:self.__size]
         else:
             self.__value = value
+        return self.__value
 
     def __next__(self):
         if self._offset < len(self.__value):
-            next = ord(self.__value[self._offset])
+            next_byte = ord(self.__value[self._offset])
             self._offset += 1
-            return next
+            return next_byte
         elif self._offset < self.__size:
-            next = ord(" ")
+            next_byte = ord(" ")
             self._offset += 1
-            return next
+            return next_byte
         else:
             raise StopIteration
 
@@ -215,10 +221,11 @@ class PackedAscii(Payload):
                  size: int,
                  value: str = None,
                  is_optional: bool = False):
+        self.__value = None
         value = "" if value is None else value
         self.__size = MIN_SIZE if size < MIN_SIZE else size
         self.__packed_size = int(ceil(self.__size * 3 / 4))
-        self.set_value(value)
+        self.__value = self.set_value(value)
         super().__init__(is_optional)
 
     def get_size(self):
@@ -231,21 +238,22 @@ class PackedAscii(Payload):
         return self.__value
 
     def set_value(self, value: str):
-        if (len(value) > self.__size):
-            newValue = value[:self.__size]
+        if len(value) > self.__size:
+            new_value = value[:self.__size]
         else:
-            newValue = value
-        newValue = str("".join(
+            new_value = value
+        new_value = str("".join(
             map(
                 lambda x: chr(ord(x) - 0x20)
-                if x >= "a" and x <= "z"
+                if "a" <= x <= "z"
                 else
                 PACKED_ASCII_FALLBACK
                 if x < " " or x > "_"
                 else
                 x,
-                newValue)))
-        self.__value = newValue
+                new_value)))
+        self.__value = new_value
+        return self.__value
 
     def __next__(self):
         if self._offset < self.__packed_size:
@@ -271,9 +279,9 @@ class PackedAscii(Payload):
             else:
                 right = 0
 
-            next = left | right
+            next_byte = left | right
             self._offset += 1
-            return next
+            return next_byte
         else:
             raise StopIteration
 
@@ -345,7 +353,7 @@ class GreedyU8Array(Payload):
                  value: bytearray = None,
                  is_optional: bool = False):
         value = bytearray() if value is None else value
-        self.set_value(value)
+        self.__value = self.set_value(value)
         super().__init__(is_optional)
 
     def get_size(self):
@@ -354,14 +362,15 @@ class GreedyU8Array(Payload):
     def get_value(self) -> bytearray:
         return self.__value
 
-    def set_value(self, value: bytearray):
+    def set_value(self, value: bytearray) -> bytearray:
         self.__value = bytearray(value)
+        return self.__value
 
     def __next__(self):
         if self._offset < len(self.__value):
-            next = self.__value[self._offset]
+            next_byte = self.__value[self._offset]
             self._offset += 1
-            return next
+            return next_byte
         else:
             raise StopIteration
 

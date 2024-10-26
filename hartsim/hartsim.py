@@ -54,7 +54,7 @@ while True:
             if request.is_long_address and request.long_address == device.unique_address\
                     or not request.is_long_address and request.command_number == 0\
                     and request.short_address == device.get_polling_address():
-                payload = command_dispatcher.dispatch(0, request.data)
+                payload = command_dispatcher.dispatch(0)
                 reply = HartFrame(FrameType.ACK,
                                   request.command_number,
                                   request.is_long_address,

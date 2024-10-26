@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import cast, Dict, List, Optional
 
 from . import Payload
-from .payloads import PayloadSequence
+from .payloads import U8, U16, U24, PayloadSequence
 
 @dataclass
 class VariableSpec:
@@ -24,13 +24,15 @@ class CommandSpec:
 
 @dataclass
 class Command:
-    request: List[Payload]
-    reply: List[Payload]
+    request: PayloadSequence
+    reply: PayloadSequence
 
 @dataclass
 class DeviceSpec(BaseModel):
     variables: List[VariableSpec]
     commands: List[CommandSpec]
+
+def raise_exception(ex): raise ex
 
 @dataclass
 class Device:
@@ -40,13 +42,19 @@ class Device:
     is_burst_mode: bool = False
 
     def get_polling_address(self) -> int:
-        return self.data['polling_address'].get_value()
+        return cast(U8, self.data['polling_address']).get_value() if isinstance(self.data['polling_address'], U8) else raise_exception(TypeError("expanded_device_type must be U16"))
 
     @classmethod
     def create(cls, device_spec: DeviceSpec):
         the_data: Dict[str, Payload] = { x.name: Payload.create(x.type, x.value) for x in device_spec.variables }
-        the_expanded_device_type: int = the_data['expanded_device_type'].get_value()
-        the_device_id: int = the_data['device_id'].get_value()
+        if isinstance(the_data['expanded_device_type'], U16):
+            the_expanded_device_type: int = cast(U16, the_data['expanded_device_type']).get_value()
+        else:
+            raise TypeError("expanded_device_type must be U16")
+        if isinstance(the_data['device_id'], U24):
+            the_device_id: int = cast(U24, the_data['device_id']).get_value()
+        else:
+            raise TypeError("device_id must be U24")
         the_unique_address = 0x3FFFFFFFFF & ((the_expanded_device_type << 24) | the_device_id)
         the_commands: Dict[int, Command] = { x.number: Command(request=PayloadSequence.create_sequence({ y.name: the_data[y.name] for y in x.request }),reply=PayloadSequence.create_sequence({ y.name: the_data[y.name] for y in x.reply })) for x in device_spec.commands }
         return cls(
@@ -59,10 +67,15 @@ class CommandDispatcher:
                  device: Device):
         self.device = device
 
-    def dispatch(self, number: int, request: bytearray) -> bytearray:
-        if number in self.device.commands:
-            self.device.data['response_code'].set_value(0)
-            return list(self.device.commands[number].reply)
+    def dispatch(self, number: int) -> bytearray:
+        if isinstance(self.device.data['response_code'], U8):
+            the_response_code: U8 = cast(U8, self.device.data['response_code'])
         else:
-            self.device.data['response_code'].set_value(64)
-            return list(PayloadSequence.create_sequence({ 'response_code': self.device.data['response_code'], 'device_status': self.device.data['device_status'] }))
+            raise TypeError("device_id must be U24")
+        if number in self.device.commands:
+            the_response_code.set_value(0)
+            return self.device.commands[number].reply.serialize()
+        else:
+            the_response_code.set_value(64)
+            error_reply = PayloadSequence.create_sequence({ 'response_code': self.device.data['response_code'], 'device_status': self.device.data['device_status'] })
+            return error_reply.serialize()
