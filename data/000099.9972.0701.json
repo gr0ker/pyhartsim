@@ -1,0 +1,156 @@
+{
+  "variables": [
+    {
+      "name": "response_code",
+      "type": "U8"
+    },
+    {
+      "name": "device_status",
+      "type": "U8"
+    },
+    {
+      "name": "expansion_code",
+      "type": "U8",
+      "value": 254
+    },
+    {
+      "name": "expanded_device_type",
+      "type": "U16",
+      "value": 39282
+    },
+    {
+      "name": "request_preambles",
+      "type": "U8",
+      "value": 5
+    },
+    {
+      "name": "universal_revision",
+      "type": "U8",
+      "value": 7
+    },
+    {
+      "name": "device_revision",
+      "type": "U8",
+      "value": 7
+    },
+    {
+      "name": "software_revision",
+      "type": "U8",
+      "value": 3
+    },
+    {
+      "name": "hardware_revision_signaling_code",
+      "type": "U8",
+      "value": 100
+    },
+    {
+      "name": "flags",
+      "type": "U8"
+    },
+    {
+      "name": "device_id",
+      "type": "U24",
+      "value": 12345678
+    },
+    {
+      "name": "response_preambles",
+      "type": "U8",
+      "value": 5
+    },
+    {
+      "name": "max_device_variables",
+      "type": "U8",
+      "value": 1
+    },
+    {
+      "name": "config_change_counter",
+      "type": "U16"
+    },
+    {
+      "name": "extended_device_status",
+      "type": "U8"
+    },
+    {
+      "name": "manufacturer_code",
+      "type": "U16",
+      "value": 153
+    },
+    {
+      "name": "private_label_distributor",
+      "type": "U16",
+      "value": 153
+    },
+    {
+      "name": "device_profile",
+      "type": "U8"
+    },
+    {
+      "name": "polling_address",
+      "type": "U8",
+      "value": 0
+    }
+  ],
+  "commands": [
+    {
+      "number": 0,
+      "request": [
+      ],
+      "reply": [
+        {
+          "name": "response_code"
+        },
+        {
+          "name": "device_status"
+        },
+        {
+          "name": "expansion_code"
+        },
+        {
+          "name": "expanded_device_type"
+        },
+        {
+          "name": "request_preambles"
+        },
+        {
+          "name": "universal_revision"
+        },
+        {
+          "name": "device_revision"
+        },
+        {
+          "name": "software_revision"
+        },
+        {
+          "name": "hardware_revision_signaling_code"
+        },
+        {
+          "name": "flags"
+        },
+        {
+          "name": "device_id"
+        },
+        {
+          "name": "response_preambles"
+        },
+        {
+          "name": "max_device_variables"
+        },
+        {
+          "name": "config_change_counter"
+        },
+        {
+          "name": "extended_device_status"
+        },
+        {
+          "name": "manufacturer_code"
+        },
+        {
+          "name": "private_label_distributor"
+        },
+        {
+          "name": "device_profile"
+        }
+      ]
+    }
+  ]
+}

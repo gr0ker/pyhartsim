@@ -94,11 +94,13 @@ class TestFramingUtils(unittest.TestCase):
 
     def test_hart_frame_default_no_short_address_format(self):
         expected = 'TYP(BACK) MST(PRI) MOD(POL) ADR(???) CMD(00123) SUM(???) DAT(NONE)'
+        # noinspection PyTypeChecker
         target = HartFrame(FrameType.BACK, 123, short_address=None)
         self.assertEqual(f'{target}', expected)
 
     def test_hart_frame_default_no_long_address_format(self):
         expected = 'TYP(BACK) MST(PRI) MOD(POL) ADR(???) CMD(00123) SUM(???) DAT(NONE)'
+        # noinspection PyTypeChecker
         target = HartFrame(FrameType.BACK, 123,
                            is_long_address=True, long_address=None)
         self.assertEqual(f'{target}', expected)
@@ -129,6 +131,7 @@ DAT(0x010203)'
 
     def test_hart_frame_undefined_format(self):
         expected = 'TYP(???) MST(???) MOD(???) ADR(???) CMD(???) SUM(???) DAT(???)'
+        # noinspection PyTypeChecker
         target = HartFrame(None, None, None, None,
                            None, None, None, None, None)
         self.assertEqual(f'{target}', expected)
