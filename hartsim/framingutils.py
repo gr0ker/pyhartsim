@@ -2,16 +2,15 @@ from enum import Enum
 from functools import reduce
 from typing import Iterator
 
-State = Enum('State', [
-    'UNKNOWN',
-    'PREAMBLES',
-    'SHORT_ADDRESS',
-    'LONG_ADDRESS',
-    'COMMAND_NUMBER',
-    'BYTE_COUNT',
-    'DATA',
-    'CHECK_SUM'])
-
+class State(Enum):
+    UNKNOWN = 1
+    PREAMBLES = 2
+    SHORT_ADDRESS = 3
+    LONG_ADDRESS = 4
+    COMMAND_NUMBER = 5
+    BYTE_COUNT = 6
+    DATA = 7
+    CHECK_SUM = 8
 
 class FrameType(Enum):
     BACK = 1
