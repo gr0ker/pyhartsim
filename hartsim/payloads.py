@@ -3,7 +3,7 @@ from functools import reduce
 from itertools import repeat
 from math import ceil, floor
 import struct
-from typing import Iterator
+from typing import Dict, Iterator
 
 from attr import dataclass
 
@@ -52,12 +52,18 @@ class Payload:
     def _deserialize(self, iterator: Iterator[int]):
         pass
 
+    @classmethod
+    def create(cls, class_name: str, value):
+        the_type = globals()[class_name]
+        return the_type(value = value)
+
 
 class Unsigned(Payload):
     def __init__(self,
-                 value: int = 0,
+                 value: int = None,
                  size: int = MIN_SIZE,
                  is_optional: bool = False):
+        value = 0 if value is None else value
         self.__size = MIN_SIZE\
             if size < MIN_SIZE\
             else\
@@ -99,36 +105,37 @@ class Unsigned(Payload):
 
 class U8(Unsigned):
     def __init__(self,
-                 value: int = 0,
+                 value: int = None,
                  is_optional: bool = False):
         super().__init__(value, 1, is_optional)
 
 
 class U16(Unsigned):
     def __init__(self,
-                 value: int = 0,
+                 value: int = None,
                  is_optional: bool = False):
         super().__init__(value, 2, is_optional)
 
 
 class U24(Unsigned):
     def __init__(self,
-                 value: int = 0,
+                 value: int = None,
                  is_optional: bool = False):
         super().__init__(value, 3, is_optional)
 
 
 class U32(Unsigned):
     def __init__(self,
-                 value: int = 0,
+                 value: int = None,
                  is_optional: bool = False):
         super().__init__(value, 4, is_optional)
 
 
 class F32(Payload):
     def __init__(self,
-                 value: float = float("nan"),
+                 value: float = None,
                  is_optional: bool = False):
+        value = float("nan") if value is None else value
         self.__size = FLOAT_SIZE
         self.set_value(value)
         super().__init__(is_optional)
@@ -165,8 +172,9 @@ class F32(Payload):
 class Ascii(Payload):
     def __init__(self,
                  size: int,
-                 value: str = "",
+                 value: str = None,
                  is_optional: bool = False):
+        value = "" if value is None else value
         self.__size = MIN_SIZE if size < MIN_SIZE else size
         self.set_value(value)
         super().__init__(is_optional)
@@ -205,8 +213,9 @@ class Ascii(Payload):
 class PackedAscii(Payload):
     def __init__(self,
                  size: int,
-                 value: str = "",
+                 value: str = None,
                  is_optional: bool = False):
+        value = "" if value is None else value
         self.__size = MIN_SIZE if size < MIN_SIZE else size
         self.__packed_size = int(ceil(self.__size * 3 / 4))
         self.set_value(value)
@@ -323,11 +332,19 @@ class PayloadSequence(Payload):
                 else:
                     raise
 
+    @classmethod
+    def create_sequence(cls, data: Dict[str, Payload]):
+        target = cls()
+        for item in data:
+            target.__dict__[item] = data[item]
+        return target
+
 
 class GreedyU8Array(Payload):
     def __init__(self,
-                 value: bytearray = bytearray(),
+                 value: bytearray = None,
                  is_optional: bool = False):
+        value = bytearray() if value is None else value
         self.set_value(value)
         super().__init__(is_optional)
 
