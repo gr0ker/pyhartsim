@@ -34,12 +34,12 @@ class TestPayloads(unittest.TestCase):
     def test_abstract_serialize_does_nothing(self):
         target = Payload()
         iterator = iter(target)
-        noItems = False
+        no_items = False
         try:
             next(iterator)
         except StopIteration:
-            noItems = True
-        self.assertTrue(noItems)
+            no_items = True
+        self.assertTrue(no_items)
 
     def test_abstract_deserialize_does_not_throw(self):
         serialized = bytearray([0x01, 0x02, 0x03, 0x04, 0x05])
@@ -230,45 +230,45 @@ class TestPayloads(unittest.TestCase):
         size = 1
         value = 0x05
         expected = bytearray([0x05])
-        expectedIndex = 0
+        expected_index = 0
         target = Unsigned(value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, size)
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, size)
 
     def test_unsigned_serialize_2_bytes(self):
         size = 2
         value = 0x0504
         expected = bytearray([0x05, 0x04])
-        expectedIndex = 0
+        expected_index = 0
         target = Unsigned(value, size)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, size)
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, size)
 
     def test_unsigned_serialize_3_bytes(self):
         size = 3
         value = 0x050403
         expected = bytearray([0x05, 0x04, 0x03])
-        expectedIndex = 0
+        expected_index = 0
         target = Unsigned(value, size)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, size)
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, size)
 
     def test_unsigned_serialize_4_bytes(self):
         size = 4
         value = 0x05040302
         expected = bytearray([0x05, 0x04, 0x03, 0x02])
-        expectedIndex = 0
+        expected_index = 0
         target = Unsigned(value, size)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, size)
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, size)
 
     def test_u8_size_is_one(self):
         expected = 1
@@ -312,12 +312,12 @@ class TestPayloads(unittest.TestCase):
         size = 4
         value = 1.234567
         expected = bytearray([0x3f, 0x9e, 0x06, 0x4b])
-        expectedIndex = 0
+        expected_index = 0
         target = F32(value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, size)
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, size)
 
     def test_ascii_default_value_is_empty(self):
         expected = ""
@@ -359,12 +359,12 @@ class TestPayloads(unittest.TestCase):
                               0x61, 0x20, 0x74, 0x65, 0x73, 0x74, 0x2e, 0x20,
                               0x44, 0x6f, 0x65, 0x73, 0x20, 0x69, 0x74, 0x20,
                               0x70, 0x61, 0x73, 0x73, 0x3f, 0x20, 0x48, 0x6d])
-        expectedIndex = 0
+        expected_index = 0
         target = Ascii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, size)
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, size)
 
     def test_ascii_serialize_pad_spaces(self):
         size = 32
@@ -373,12 +373,12 @@ class TestPayloads(unittest.TestCase):
                               0x61, 0x20, 0x74, 0x65, 0x73, 0x74, 0x2e, 0x20,
                               0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
                               0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20])
-        expectedIndex = 0
+        expected_index = 0
         target = Ascii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, size)
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, size)
 
     def test_packed_ascii_value_handling(self):
         size = 32
@@ -456,133 +456,133 @@ class TestPayloads(unittest.TestCase):
         size = 1
         value = "1"
         expected = bytearray([0xC4])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_2(self):
         size = 2
         value = "12"
         expected = bytearray([0xC7, 0x20])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_3(self):
         size = 3
         value = "123"
         expected = bytearray([0xC7, 0x2C, 0xC0])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_4(self):
         size = 4
         value = "1234"
         expected = bytearray([0xC7, 0x2C, 0xF4])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_5(self):
         size = 5
         value = "12345"
         expected = bytearray([0xC7, 0x2C, 0xF4, 0xD4])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_6(self):
         size = 6
         value = "123456"
         expected = bytearray([0xC7, 0x2C, 0xF4, 0xD7, 0x60])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_7(self):
         size = 7
         value = "1234567"
         expected = bytearray([0xC7, 0x2C, 0xF4, 0xD7, 0x6D, 0xC0])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_8(self):
         size = 8
         value = "12345678"
         expected = bytearray([0xC7, 0x2C, 0xF4, 0xD7, 0x6D, 0xF8])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_8_1(self):
         size = 8
         value = "1"
         expected = bytearray([0xC6, 0x08, 0x20, 0x82, 0x08, 0x20])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_8_2(self):
         size = 8
         value = "12"
         expected = bytearray([0xC7, 0x28, 0x20, 0x82, 0x08, 0x20])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_8_3(self):
         size = 8
         value = "123"
         expected = bytearray([0xC7, 0x2C, 0xE0, 0x82, 0x08, 0x20])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_packed_ascii_serialize_8_4(self):
         size = 8
         value = "1234"
         expected = bytearray([0xC7, 0x2C, 0xF4, 0x82, 0x08, 0x20])
-        expectedIndex = 0
+        expected_index = 0
         target = PackedAscii(size, value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_ascii_deserialize_digits(self):
         size = 8
@@ -647,12 +647,12 @@ class TestPayloads(unittest.TestCase):
                               0x44, 0x6f, 0x65, 0x73, 0x20, 0x69, 0x74, 0x20,
                               0x70, 0x61, 0x73, 0x73, 0x3f, 0x20, 0x48, 0x6d])
         value = expected
-        expectedIndex = 0
+        expected_index = 0
         target = GreedyU8Array(value)
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_payload_sequence_is_serialized(self):
         expected = bytearray([0x04, 0x03, 0x02, 0x01])
@@ -660,11 +660,11 @@ class TestPayloads(unittest.TestCase):
         target.first_byte.set_value(0x04)
         target.second_byte.set_value(0x03)
         target.third_word.set_value(0x0201)
-        expectedIndex = 0
+        expected_index = 0
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
     def test_payload_sequence_is_deserialized(self):
         serialized = bytearray([0x09, 0x08, 0x07, 0x06])
@@ -695,11 +695,11 @@ class TestPayloads(unittest.TestCase):
         target.second_byte.set_value(0x03)
         target.second_byte.skip()
         target.third_word.set_value(0x0201)
-        expectedIndex = 0
+        expected_index = 0
         for item in target:
-            self.assertEqual(item, expected[expectedIndex], f"{expectedIndex}")
-            expectedIndex += 1
-        self.assertEqual(expectedIndex, len(expected))
+            self.assertEqual(item, expected[expected_index], f"{expected_index}")
+            expected_index += 1
+        self.assertEqual(expected_index, len(expected))
 
 
 if __name__ == '__main__':
