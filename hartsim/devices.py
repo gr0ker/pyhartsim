@@ -42,7 +42,9 @@ class Device:
     is_burst_mode: bool = False
 
     def get_polling_address(self) -> int:
-        return cast(U8, self.data['polling_address']).get_value() if isinstance(self.data['polling_address'], U8) else raise_exception(TypeError("expanded_device_type must be U16"))
+        return cast(U8, self.data['polling_address']).get_value()\
+            if isinstance(self.data['polling_address'], U8)\
+            else raise_exception(TypeError("expanded_device_type must be U16"))
 
     @classmethod
     def create(cls, device_spec: DeviceSpec):
@@ -56,7 +58,12 @@ class Device:
         else:
             raise TypeError("device_id must be U24")
         the_unique_address = 0x3FFFFFFFFF & ((the_expanded_device_type << 24) | the_device_id)
-        the_commands: Dict[int, Command] = { x.number: Command(request=PayloadSequence.create_sequence({ y.name: the_data[y.name] for y in x.request }),reply=PayloadSequence.create_sequence({ y.name: the_data[y.name] for y in x.reply })) for x in device_spec.commands }
+        the_commands: Dict[int, Command] = {
+            x.number: Command(
+                request=PayloadSequence.create_sequence({ y.name: the_data[y.name] for y in x.request }),
+                reply=PayloadSequence.create_sequence({ y.name: the_data[y.name] for y in x.reply }))\
+            for x in device_spec.commands
+        }
         return cls(
             unique_address=the_unique_address,
             data=the_data,
@@ -77,5 +84,8 @@ class CommandDispatcher:
             return self.device.commands[number].reply.serialize()
         else:
             the_response_code.set_value(64)
-            error_reply = PayloadSequence.create_sequence({ 'response_code': self.device.data['response_code'], 'device_status': self.device.data['device_status'] })
+            error_reply = PayloadSequence.create_sequence({
+                'response_code': self.device.data['response_code'],
+                'device_status': self.device.data['device_status']
+            })
             return error_reply.serialize()
