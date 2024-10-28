@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-
+import json
 from pydantic import BaseModel
 from typing import cast, Dict, List, Optional
 
@@ -31,6 +31,16 @@ class Command:
 class DeviceSpec(BaseModel):
     variables: List[VariableSpec]
     commands: List[CommandSpec]
+
+    @classmethod
+    def load(cls, path: str):
+        data_file = open(path)
+        try:
+            device_data = json.load(data_file)
+        finally:
+            data_file.close()
+
+        return DeviceSpec.model_validate(device_data)
 
 def raise_exception(ex): raise ex
 
