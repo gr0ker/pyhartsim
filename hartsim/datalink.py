@@ -4,6 +4,19 @@ import time
 from .framingutils import FrameType, HartFrame, HartFrameBuilder
 from .devices import CommandDispatcher
 
+
+BAUD_RATE = 1200
+PARITY = serial.PARITY_ODD
+BYTE_SIZE = 8
+STOP_BITS = 1
+
+def create_port(port_name: str) -> serial.Serial:
+    return serial.Serial(port_name,
+                  baudrate=BAUD_RATE,
+                  parity=PARITY,
+                  bytesize=BYTE_SIZE,
+                  stopbits=STOP_BITS)
+
 class DataLink:
     def __init__(self, port: serial.Serial, command_dispatcher: CommandDispatcher, frame_builder: HartFrameBuilder):
         self.__port = port
