@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 from typing import cast, Dict, List, Optional
 
-from . import Payload
+from . import Payload, HartFrame
 from .payloads import U8, U16, U24, PayloadSequence
 
 @dataclass
@@ -72,20 +72,26 @@ class Device:
 class CommandDispatcher:
     def __init__(self,
                  device: Device):
-        self.device = device
+        self.__device = device
 
-    def dispatch(self, number: int) -> bytearray:
-        if isinstance(self.device.data['response_code'], U8):
-            the_response_code: U8 = cast(U8, self.device.data['response_code'])
+    def should_dispatch(self, request: HartFrame) -> bool:
+        return request.is_long_address and request.long_address == self.__device.unique_address\
+            or not request.is_long_address and request.command_number == 0\
+            and request.short_address == self.__device.get_polling_address()
+
+
+    def dispatch(self, number: int) -> tuple[bytearray, bool]:
+        if isinstance(self.__device.data['response_code'], U8):
+            the_response_code: U8 = cast(U8, self.__device.data['response_code'])
         else:
             raise TypeError("device_id must be U24")
-        if number in self.device.commands:
+        if number in self.__device.commands:
             the_response_code.set_value(0)
-            return self.device.commands[number].reply.serialize()
+            return self.__device.commands[number].reply.serialize(), self.__device.is_burst_mode
         else:
             the_response_code.set_value(64)
             error_reply = PayloadSequence.create_sequence({
-                'response_code': self.device.data['response_code'],
-                'device_status': self.device.data['device_status']
+                'response_code': self.__device.data['response_code'],
+                'device_status': self.__device.data['device_status']
             })
-            return error_reply.serialize()
+            return error_reply.serialize(), self.__device.is_burst_mode

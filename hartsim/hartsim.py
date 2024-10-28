@@ -1,9 +1,9 @@
 import json
 import serial
-import time
 
 from .config import Configuration
-from .framingutils import FrameType, HartFrame, HartFrameBuilder
+from .datalink import DataLink
+from .framingutils import HartFrameBuilder
 from .devices import DeviceSpec, Device, CommandDispatcher
 
 config_file = open('config/config.json')
@@ -34,43 +34,8 @@ port = serial.Serial(config.port,
                      bytesize=8,
                      stopbits=1)
 
-port.flush()
-port.read_all()
-port.dtr = False
+frame_builder = HartFrameBuilder()
 
-print(f'Listening {config.port}')
+data_link = DataLink(port, command_dispatcher, frame_builder)
 
-frameBuilder = HartFrameBuilder()
-
-port.flush()
-
-while True:
-    if port.in_waiting:
-        data = port.read_all()
-        if frameBuilder.collect(iter(data)):
-            request = frameBuilder.dequeue()
-            print(f'{config.port}    <= {request}')
-            status = None
-            if request.is_long_address and request.long_address == device.unique_address\
-                    or not request.is_long_address and request.command_number == 0\
-                    and request.short_address == device.get_polling_address():
-                payload = command_dispatcher.dispatch(0)
-                reply = HartFrame(FrameType.ACK,
-                                  request.command_number,
-                                  request.is_long_address,
-                                  device.get_polling_address(),
-                                  device.unique_address,
-                                  request.is_primary_master,
-                                  device.is_burst_mode,
-                                  payload)
-                reply_data = bytearray([0xFF, 0xFF, 0xFF])
-                reply_data.extend(reply.serialize())
-                port.dtr = True
-                port.write(reply_data)
-                port.dtr = False
-                print(
-                    f'{config.port} #{device.get_polling_address()} => {reply}')
-            else:
-                print(f'{config.port} => None ({status})')
-    else:
-        time.sleep(0.01)
+data_link.Run()
