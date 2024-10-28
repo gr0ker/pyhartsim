@@ -11,14 +11,13 @@ class TestDataLink(unittest.TestCase):
         mock_serial_instance = MagicMock()
 
         with patch("serial.Serial", return_value=mock_serial_instance) as mock_serial_class:
-            target = create_port('dummy_port')
+            create_port('dummy_port')
 
             mock_serial_class.assert_called_once_with('dummy_port',
                 baudrate=1200,
                 parity=serial.PARITY_ODD,
                 bytesize=8,
                 stopbits=1)
-
 
 if __name__ == '__main__':
     unittest.main()  # pragma: no cover

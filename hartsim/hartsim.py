@@ -7,7 +7,7 @@ config = Configuration.load('config/config.json')
 device_spec = DeviceSpec.load('data/000099.9972.0701.json')
 device = Device.create(device_spec)
 
-print(f"Polling address: #{device.get_polling_address()}")
+print(f"Polling address: #{device.polling_address.get_value()}")
 print(f"Unique address: 0x{device.unique_address:010X}")
 
 port = create_port(config.port)

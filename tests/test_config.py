@@ -10,7 +10,7 @@ class TestConfig(unittest.TestCase):
         expected = 'Qwerty123'
         data = { 'port': expected }
         with patch("builtins.open", mock_open(read_data="{}")):
-            with patch("json.load", return_value=data, ):
+            with patch("json.load", return_value=data):
                 target = Configuration.load('some-path')
                 self.assertEqual(target.port, expected)
 
