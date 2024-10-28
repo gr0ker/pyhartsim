@@ -23,7 +23,7 @@ class DataLink:
         self.__command_dispatcher = command_dispatcher
         self.__frame_builder = frame_builder
 
-    def Run(self):
+    def run(self):
         self.__port.flush()
         self.__port.read_all()
         self.__port.dtr = False
