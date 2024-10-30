@@ -779,7 +779,7 @@ class Cmd161Reply (PayloadSequence):
     device_status: U8 = U8()
     levelUnits: U8 = U8()
     volumeUnits: U8 = U8()
-    volumeSetupNumStrapReadPoints: U8 = U8(3)
+    volumeSetupNumStrapReadPoints: U8 = U8(8)
     tank_type: U8 = U8(5)  # custom
     reserved_1: Ascii = Ascii(12)
 
@@ -793,7 +793,29 @@ class Cmd161Reply (PayloadSequence):
 class Cmd162Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: Ascii = Ascii(83)
+    readStrappingPointSet_local: U8 = U8()
+    levelUnits: U8 = U8()
+    volumeUnits: U8 = U8()
+    level_a: F32 = F32(10)
+    level_b: F32 = F32(20)
+    level_c: F32 = F32(30)
+    level_d: F32 = F32(40)
+    level_e: F32 = F32(50)
+    level_f: F32 = F32(60)
+    level_g: F32 = F32(70)
+    level_h: F32 = F32(80)
+    level_i: F32 = F32(90)
+    level_j: F32 = F32(100)
+    volume_a: F32 = F32(0.1)
+    volume_b: F32 = F32(0.2)
+    volume_c: F32 = F32(0.3)
+    volume_d: F32 = F32(0.4)
+    volume_e: F32 = F32(0.5)
+    volume_f: F32 = F32(0.6)
+    volume_g: F32 = F32(0.7)
+    volume_h: F32 = F32(0.8)
+    volume_i: F32 = F32(0.9)
+    volume_j: F32 = F32(1.0)
 
     @classmethod
     def create(cls, device: HartDevice):
