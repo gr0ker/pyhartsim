@@ -41,6 +41,18 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd15Reply.create(device)
     elif command_number == 20 and device.universal_revision.get_value() >= 6:
         payload = Cmd20Reply.create(device)
+    elif command_number == 40:
+        request = Cmd40Request()
+        request.deserialize(iter(data))
+        payload = Cmd40Reply.create(device, request)
+    elif command_number == 45:
+        request = Cmd45Request()
+        request.deserialize(iter(data))
+        payload = Cmd45Reply.create(device, request)
+    elif command_number == 46:
+        request = Cmd46Request()
+        request.deserialize(iter(data))
+        payload = Cmd46Reply.create(device, request)
     elif command_number == 48:
         payload = Cmd48Reply.create(device)
     elif command_number == 54:
@@ -166,7 +178,7 @@ class Cmd1Reply (PayloadSequence):
 class Cmd2Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    loop_current: U8 = U8()
+    loop_current: F32 = F32()
     percent_of_range: F32 = F32()
 
     @classmethod
@@ -589,6 +601,54 @@ class Cmd20Reply (PayloadSequence):
             device_status=device.device_status,
             long_tag=device.hart_long_tag)
 
+@dataclass
+class Cmd40Request (PayloadSequence):
+    loop_current: F32 = F32()
+
+
+@dataclass
+class Cmd40Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    loop_current: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd40Request):
+        return cls(
+            device_status=device.device_status,
+            loop_current=F32(request.loop_current.get_value()))
+
+@dataclass
+class Cmd45Request(PayloadSequence):
+    loop_current: F32 = F32()
+
+@dataclass
+class Cmd45Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    loop_current: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd45Request):
+        return cls(
+            device_status=device.device_status,
+            loop_current=F32(request.loop_current.get_value()))
+
+@dataclass
+class Cmd46Request(PayloadSequence):
+    loop_current: F32 = F32()
+
+@dataclass
+class Cmd46Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    loop_current: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd46Request):
+        return cls(
+            device_status=device.device_status,
+            loop_current=F32(request.loop_current.get_value()))
 
 @dataclass
 class Cmd48Reply (PayloadSequence):
