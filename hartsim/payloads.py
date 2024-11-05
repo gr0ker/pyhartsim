@@ -143,13 +143,13 @@ class F32(Payload):
         self.__value = value
 
     def __iter__(self):
-        self.__serialized = struct.pack("f", self.__value)
+        self.__serialized = struct.pack(">f", self.__value)
         super().__iter__()
         return self
 
     def __next__(self):
         if self._offset < self.__size:
-            next = self.__serialized[self.__size - self._offset - 1]
+            next = self.__serialized[self._offset]
             self._offset += 1
             return next
         else:
@@ -159,7 +159,7 @@ class F32(Payload):
         self.__serialized = bytearray([0, 0, 0, 0])
         for i in range(0, self.__size):
             self.__serialized[i] = (next(iterator) & FULL_BYTE_MASK)
-        self.set_value(struct.unpack('>f', self.__serialized))
+        self.set_value(struct.unpack('>f', self.__serialized)[0])
 
 
 class Ascii(Payload):
