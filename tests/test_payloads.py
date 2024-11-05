@@ -301,12 +301,14 @@ class TestPayloads(unittest.TestCase):
 
     def test_float_deserialize(self):
         serialized = bytearray([0x01, 0x3f, 0x9e, 0x06, 0x4b])
-        expected = 1.2345670461654663,
+        expected = 1.2345670461654663
         target = F32()
         serialized_iterator = iter(serialized)
         next(serialized_iterator)
         target.deserialize(serialized_iterator)
-        self.assertEqual(target.get_value(), expected)
+        actual_value = target.get_value()
+        self.assertEqual(actual_value, expected)
+        self.assertEqual(type(actual_value), float)
 
     def test_float_serialize(self):
         size = 4
