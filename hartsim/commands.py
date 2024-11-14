@@ -71,6 +71,8 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd128Reply.create(device)
     elif command_number == 133:
         payload = Cmd133Reply.create(device)
+    elif command_number == 142:
+        payload = Cmd142Reply.create(device)
     elif command_number == 148:
         payload = Cmd148Reply.create(device)
     elif command_number == 160:
@@ -810,6 +812,17 @@ class Cmd133Reply (PayloadSequence):
         return cls(
             device_status=device.device_status)
 
+@dataclass
+class Cmd142Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: U8 = U8(2)
+    reserved_1: Ascii = Ascii(16)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
 
 @dataclass
 class Cmd148Reply (PayloadSequence):
