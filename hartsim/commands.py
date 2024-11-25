@@ -144,7 +144,7 @@ class Cmd0Hart7Reply (PayloadSequence):
     expanded_device_type: U16 = U16()
     request_preambles: U8 = U8(5)
     universal_revision: U8 = U8(7)
-    device_revision: U8 = U8(7)
+    device_revision: U8 = U8(3)
     software_revision: U8 = U8(3)
     hardware_revision_signaling_code: U8 = U8(0x64)
     flags: U8 = U8()
@@ -153,8 +153,8 @@ class Cmd0Hart7Reply (PayloadSequence):
     max_device_variables: U8 = U8(1)
     config_change_counter: U16 = U16()
     extended_device_status: U8 = U8()
-    manufacturer_code: U16 = U16(0x0099)
-    private_label_distributor: U16 = U16(0x0099)
+    manufacturer_code: U16 = U16(0x00f9)
+    private_label_distributor: U16 = U16(0x00f9)
     device_profile: U8 = U8()
 
     @classmethod
