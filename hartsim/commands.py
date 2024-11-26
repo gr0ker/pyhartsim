@@ -77,6 +77,18 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd133Reply.create(device)
     elif command_number == 142:
         payload = Cmd142Reply.create(device)
+    elif command_number == 143:
+        request = Cmd143Request()
+        request.deserialize(iter(data))
+        device.high_alarm_level.set_value(request.high_alarm_level.get_value())
+        device.low_alarm_level.set_value(request.low_alarm_level.get_value())
+        payload = Cmd143Reply.create(device)
+    elif command_number == 144:
+        request = Cmd144Request()
+        request.deserialize(iter(data))
+        device.high_saturation_level.set_value(request.high_saturation_level.get_value())
+        device.low_saturation_level.set_value(request.low_saturation_level.get_value())
+        payload = Cmd144Reply.create(device)
     elif command_number == 148:
         payload = Cmd148Reply.create(device)
     elif command_number == 160:
@@ -144,7 +156,7 @@ class Cmd0Hart7Reply (PayloadSequence):
     expanded_device_type: U16 = U16()
     request_preambles: U8 = U8(5)
     universal_revision: U8 = U8(7)
-    device_revision: U8 = U8(7)
+    device_revision: U8 = U8(2)
     software_revision: U8 = U8(3)
     hardware_revision_signaling_code: U8 = U8(0x64)
     flags: U8 = U8()
@@ -153,8 +165,8 @@ class Cmd0Hart7Reply (PayloadSequence):
     max_device_variables: U8 = U8(1)
     config_change_counter: U16 = U16()
     extended_device_status: U8 = U8()
-    manufacturer_code: U16 = U16(0x0099)
-    private_label_distributor: U16 = U16(0x0099)
+    manufacturer_code: U16 = U16(0x0026)
+    private_label_distributor: U16 = U16(0x0026)
     device_profile: U8 = U8()
 
     @classmethod
@@ -776,6 +788,7 @@ class Cmd90Reply (PayloadSequence):
     year_clock_last_set: U8 = U8()
     time_clock_last_set: U32 = U32()
     rtc_flags: U8 = U8()
+    reserved: Ascii = Ascii(10)
 
     @classmethod
     def create(cls, device: HartDevice):
@@ -840,13 +853,57 @@ class Cmd133Reply (PayloadSequence):
 class Cmd142Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: U8 = U8(2)
-    reserved_1: Ascii = Ascii(16)
+    high_alarm_level: F32 = F32()
+    low_alarm_level: F32 = F32()
+    high_saturation_level: F32 = F32()
+    low_saturation_level: F32 = F32()
 
     @classmethod
     def create(cls, device: HartDevice):
         return cls(
-            device_status=device.device_status)
+            device_status=device.device_status,
+            high_alarm_level=device.high_alarm_level,
+            low_alarm_level=device.low_alarm_level,
+            high_saturation_level=device.high_saturation_level,
+            low_saturation_level=device.low_saturation_level)
+
+@dataclass
+class Cmd143Request (PayloadSequence):
+    high_alarm_level: F32 = F32()
+    low_alarm_level: F32 = F32()
+
+@dataclass
+class Cmd143Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    high_alarm_level: F32 = F32()
+    low_alarm_level: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status,
+            high_alarm_level=device.high_alarm_level,
+            low_alarm_level=device.low_alarm_level)
+
+@dataclass
+class Cmd144Request (PayloadSequence):
+    high_saturation_level: F32 = F32()
+    low_saturation_level: F32 = F32()
+
+@dataclass
+class Cmd144Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    high_saturation_level: F32 = F32()
+    low_saturation_level: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status,
+            high_saturation_level=device.high_saturation_level,
+            low_saturation_level=device.low_saturation_level)
 
 @dataclass
 class Cmd148Reply (PayloadSequence):
