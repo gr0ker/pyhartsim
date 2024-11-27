@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from random import random
+
 from .payloads import F32, U16, U24, U32, U8, Ascii, GreedyU8Array, PackedAscii
 from .payloads import PayloadSequence
 from .devices import HartDevice
@@ -21,6 +23,7 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
             payload = Cmd0Hart7Reply.create(device)
     elif command_number == 1:
         payload = Cmd1Reply.create(device)
+        payload.pv_value.set_value(payload.pv_value.get_value() + random())
     elif command_number == 2:
         payload = Cmd2Reply.create(device)
     elif command_number == 3:
