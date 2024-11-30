@@ -89,6 +89,12 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd177Reply.create(device)
     elif command_number == 196:
         payload = Cmd196Reply.create(device)
+    elif command_number == 200:
+        payload = Cmd200Reply.create(device)
+    elif command_number == 202:
+        payload = Cmd202Reply.create(device)
+    elif command_number == 203:
+        payload = Cmd203Reply.create(device)
     elif command_number == 216:
         payload = Cmd216Reply.create(device)
     elif command_number == 217:
@@ -940,6 +946,39 @@ class Cmd196Reply (PayloadSequence):
     reserved_1: U32 = U32()
     reserved_2: U32 = U32()
     reserved_3: U32 = U32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+@dataclass
+class Cmd200Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: Ascii = Ascii(50)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+@dataclass
+class Cmd202Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: Ascii = Ascii(50)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+@dataclass
+class Cmd203Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: Ascii = Ascii(50)
 
     @classmethod
     def create(cls, device: HartDevice):
