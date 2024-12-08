@@ -79,6 +79,12 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd128Reply.create(device)
     elif command_number == 133:
         payload = Cmd133Reply.create(device)
+    elif command_number == 136:
+        request = Cmd136Request()
+        request.deserialize(iter(data))
+        payload = Cmd136Reply.create(device, request)
+    elif command_number == 137:
+        payload = Cmd137Reply.create(device)
     elif command_number == 142:
         payload = Cmd142Reply.create(device)
     elif command_number == 148:
@@ -861,6 +867,36 @@ class Cmd133Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status)
+
+@dataclass
+class Cmd136Request (PayloadSequence):
+    display_parameters: U16 = U16()
+
+
+@dataclass
+class Cmd136Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    display_parameters: U16 = U16()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd136Request):
+        device.display_parameters.set_value(request.display_parameters.get_value())
+        payload = cls(device_status=device.device_status,display_parameters=device.display_parameters)
+        return payload
+
+@dataclass
+class Cmd137Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    glcd_adjustment: U8 = U8(0x12)
+    segment_display_language: U8 = U8(0x34)
+    display_parameters: U16 = U16()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        payload = cls(device_status=device.device_status,display_parameters=device.display_parameters)
+        return payload
 
 @dataclass
 class Cmd142Reply (PayloadSequence):

@@ -39,6 +39,7 @@ class HartDevice:
     percent_of_range: F32 = F32(0.0200625)
     device_specific_status_0: U8 = U8(0x02)
     alternate_device_specific_status_0: U8 = U8()
+    display_parameters: U16 = U16(0xAAAA)
     # Device Variables
     # pressure: DeviceVariable = DeviceVariable(12, 1.2345, 65, 192)
     # temperature: DeviceVariable = DeviceVariable(32, 23.456, 0, 192)
