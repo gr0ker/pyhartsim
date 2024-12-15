@@ -41,6 +41,10 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd15Reply.create(device)
     elif command_number == 20 and device.universal_revision.get_value() >= 6:
         payload = Cmd20Reply.create(device)
+    elif command_number == 34:
+        request = Cmd34Request()
+        request.deserialize(iter(data))
+        payload = Cmd34Reply.create(device, request)
     elif command_number == 36:
         payload = Cmd36Reply.create(device)
     elif command_number == 37:
@@ -614,6 +618,22 @@ class Cmd20Reply (PayloadSequence):
         return cls(
             device_status=device.device_status,
             long_tag=device.hart_long_tag)
+
+@dataclass
+class Cmd34Request (PayloadSequence):
+    pv_damping: F32 = U32()
+
+@dataclass
+class Cmd34Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    pv_damping: F32 = U32()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd34Request):
+        return cls(
+            device_status=device.device_status,
+            pv_damping=request.pv_damping)
 
 @dataclass
 class Cmd36Reply(PayloadSequence):
