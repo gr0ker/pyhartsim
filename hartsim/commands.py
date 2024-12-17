@@ -63,6 +63,10 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd46Reply.create(device, request)
     elif command_number == 48:
         payload = Cmd48Reply.create(device)
+    elif command_number == 53:
+        request = Cmd53Request()
+        request.deserialize(iter(data))
+        payload = Cmd53Reply.create(device, request)
     elif command_number == 54:
         request = Cmd54Request()
         request.deserialize(iter(data))
@@ -601,16 +605,20 @@ class Cmd13Reply (PayloadSequence):
 class Cmd15Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: U32 = U32()
-    reserved_1: U32 = U32()
-    reserved_2: U32 = U32()
+    reserved_0: U8 = U8()
+    reserved_1: U8 = U8()
+    units: U8 = U8(12)
+    reserved_2: U8 = U8()
     reserved_3: U32 = U32()
-    reserved_4: U24 = U24()
+    reserved_4: U32 = U32()
+    reserved_5: U32 = U32()
+    reserved_6: U24 = U24()
 
     @classmethod
     def create(cls, device: HartDevice):
         return cls(
-            device_status=device.device_status)
+            device_status=device.device_status,
+            units=device.device_variables[0].units)
 
 
 @dataclass
@@ -742,6 +750,27 @@ class Cmd48Reply (PayloadSequence):
         return payload
 
 @dataclass
+class Cmd53Request (PayloadSequence):
+    device_variable_code: U8 = U8()
+    device_variable_units: U8 = U8()
+
+@dataclass
+class Cmd53Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    device_variable_code: U8 = U8()
+    device_variable_units: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd53Request):
+        device.device_variables[request.device_variable_code.get_value()].units.set_value(
+            request.device_variable_units.get_value())
+        return cls(
+            device_status=device.device_status,
+            device_variable_code=request.device_variable_code,
+            device_variable_units=request.device_variable_units)
+
+@dataclass
 class Cmd54Request (PayloadSequence):
     device_variable_code: U8 = U8()
 
@@ -768,6 +797,9 @@ class Cmd54Reply (PayloadSequence):
 
         payload.device_variable_code.set_value(
             request.device_variable_code.get_value())
+
+        payload.device_variable_units.set_value(
+            device.device_variables[request.device_variable_code.get_value()].units.get_value())
 
         payload.device_variable_classification.set_value(
             device.device_variables[request.device_variable_code.get_value()].classification.get_value())
