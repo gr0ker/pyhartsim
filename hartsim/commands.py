@@ -885,8 +885,10 @@ class Cmd128Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
-        return cls(
+        payload = cls(
             device_status=device.device_status)
+        payload.reserved_0.set_value('\0' * 31)
+        return payload
 
 
 @dataclass
@@ -939,8 +941,10 @@ class Cmd142Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
-        return cls(
+        payload = cls(
             device_status=device.device_status)
+        payload.reserved_1.set_value('\0' * 16)
+        return payload
 
 @dataclass
 class Cmd148Reply (PayloadSequence):
@@ -978,8 +982,10 @@ class Cmd161Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
-        return cls(
+        payload = cls(
             device_status=device.device_status)
+        payload.reserved_1.set_value('\0' * 12)
+        return payload
 
 
 @dataclass
@@ -1023,8 +1029,10 @@ class Cmd177Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
-        return cls(
+        payload = cls(
             device_status=device.device_status)
+        payload.reserved_0.set_value('\0' * 86)
+        return payload
 
 @dataclass
 class Cmd196Reply (PayloadSequence):
@@ -1048,8 +1056,10 @@ class Cmd200Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
-        return cls(
+        payload = cls(
             device_status=device.device_status)
+        payload.reserved_0.set_value('\0' * 50)
+        return payload
 
 @dataclass
 class Cmd202Reply (PayloadSequence):
@@ -1059,8 +1069,10 @@ class Cmd202Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
-        return cls(
+        payload = cls(
             device_status=device.device_status)
+        payload.reserved_0.set_value('\0' * 50)
+        return payload
 
 @dataclass
 class Cmd203Reply (PayloadSequence):
@@ -1070,8 +1082,10 @@ class Cmd203Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
-        return cls(
+        payload = cls(
             device_status=device.device_status)
+        payload.reserved_0.set_value('\0' * 50)
+        return payload
 
 @dataclass
 class Cmd216Reply (PayloadSequence):
