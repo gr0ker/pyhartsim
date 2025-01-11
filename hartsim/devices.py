@@ -40,6 +40,11 @@ class HartDevice:
     device_specific_status_0: U8 = U8(0x02)
     alternate_device_specific_status_0: U8 = U8()
     display_parameters: U16 = U16(0xAAAA)
+    alarm_saturation_setting: U8 = U8(1)
+    high_alarm_level: F32 = F32(23.0)
+    low_alarm_level: F32 = F32(3.4)
+    high_saturation_level: F32 = F32(22.8)
+    low_saturation_level: F32 = F32(3.9)
     # Device Variables
     # pressure: DeviceVariable = DeviceVariable(12, 1.2345, 65, 192)
     # temperature: DeviceVariable = DeviceVariable(32, 23.456, 0, 192)

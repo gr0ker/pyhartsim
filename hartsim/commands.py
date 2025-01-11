@@ -91,6 +91,10 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd137Reply.create(device)
     elif command_number == 142:
         payload = Cmd142Reply.create(device)
+    elif command_number == 140:
+        request = Cmd140Request()
+        request.deserialize(iter(data))
+        payload = Cmd140Reply.create(device, request)
     elif command_number == 148:
         payload = Cmd148Reply.create(device)
     elif command_number == 160:
@@ -933,18 +937,57 @@ class Cmd137Reply (PayloadSequence):
         return payload
 
 @dataclass
+class Cmd140Request (PayloadSequence):
+    alarm_saturation_setting: U8 = U8()
+    high_alarm_level: F32 = F32()
+    low_alarm_level: F32 = F32()
+    high_saturation_level: F32 = F32()
+    low_saturation_level: F32 = F32()
+
+@dataclass
+class Cmd140Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    alarm_saturation_setting: U8 = U8()
+    high_alarm_level: F32 = F32()
+    low_alarm_level: F32 = F32()
+    high_saturation_level: F32 = F32()
+    low_saturation_level: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd140Request):
+        device.alarm_saturation_setting.set_value(request.alarm_saturation_setting.get_value())
+        device.high_alarm_level.set_value(request.high_alarm_level.get_value())
+        device.low_alarm_level.set_value(request.low_alarm_level.get_value())
+        device.high_saturation_level.set_value(request.high_saturation_level.get_value())
+        device.low_saturation_level.set_value(request.low_saturation_level.get_value())
+        return cls(
+            device_status=device.device_status,
+            alarm_saturation_setting=device.alarm_saturation_setting,
+            high_alarm_level=device.high_alarm_level,
+            low_alarm_level=device.low_alarm_level,
+            high_saturation_level=device.high_saturation_level,
+            low_saturation_level=device.low_saturation_level)
+
+@dataclass
 class Cmd142Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: U8 = U8(2)
-    reserved_1: Ascii = Ascii(16)
+    alarm_saturation_setting: U8 = U8()
+    high_alarm_level: F32 = F32()
+    low_alarm_level: F32 = F32()
+    high_saturation_level: F32 = F32()
+    low_saturation_level: F32 = F32()
 
     @classmethod
     def create(cls, device: HartDevice):
-        payload = cls(
-            device_status=device.device_status)
-        payload.reserved_1.set_value('\0' * 16)
-        return payload
+        return cls(
+            device_status=device.device_status,
+            alarm_saturation_setting=device.alarm_saturation_setting,
+            high_alarm_level=device.high_alarm_level,
+            low_alarm_level=device.low_alarm_level,
+            high_saturation_level=device.high_saturation_level,
+            low_saturation_level=device.low_saturation_level)
 
 @dataclass
 class Cmd148Reply (PayloadSequence):
