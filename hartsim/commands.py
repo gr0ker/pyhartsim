@@ -91,10 +91,10 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd137Reply.create(device)
     elif command_number == 142:
         payload = Cmd142Reply.create(device)
-    elif command_number == 140:
-        request = Cmd140Request()
-        request.deserialize(iter(data))
-        payload = Cmd140Reply.create(device, request)
+    # elif command_number == 140:
+    #     request = Cmd140Request()
+    #     request.deserialize(iter(data))
+    #     payload = Cmd140Reply.create(device, request)
     elif command_number == 148:
         payload = Cmd148Reply.create(device)
     elif command_number == 160:
@@ -103,6 +103,10 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd161Reply.create(device)
     elif command_number == 162:
         payload = Cmd162Reply.create(device)
+    elif command_number == 168:
+        payload = Cmd168Reply.create(device)
+    elif command_number == 169:
+        payload = Cmd169Reply.create(device)
     elif command_number == 177:
         payload = Cmd177Reply.create(device)
     elif command_number == 196:
@@ -168,7 +172,7 @@ class Cmd0Hart7Reply (PayloadSequence):
     expanded_device_type: U16 = U16()
     request_preambles: U8 = U8(5)
     universal_revision: U8 = U8(7)
-    device_revision: U8 = U8(7)
+    device_revision: U8 = U8(2)
     software_revision: U8 = U8(3)
     hardware_revision_signaling_code: U8 = U8(0x64)
     flags: U8 = U8()
@@ -177,8 +181,8 @@ class Cmd0Hart7Reply (PayloadSequence):
     max_device_variables: U8 = U8(1)
     config_change_counter: U16 = U16()
     extended_device_status: U8 = U8()
-    manufacturer_code: U16 = U16(0x0099)
-    private_label_distributor: U16 = U16(0x0099)
+    manufacturer_code: U16 = U16(0x60c0)
+    private_label_distributor: U16 = U16(0x60c0)
     device_profile: U8 = U8()
 
     @classmethod
@@ -1065,6 +1069,61 @@ class Cmd162Reply (PayloadSequence):
             device_status=device.device_status)
 
 @dataclass
+class Cmd168Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+@dataclass
+class Cmd169Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_u16_0: U16 = U16()
+    reserved_u16_1: U16 = U16()
+    reserved_f32_0: F32 = F32()
+    reserved_f32_1: F32 = F32()
+    reserved_f32_2: F32 = F32()
+    reserved_f32_3: F32 = F32()
+    reserved_f32_4: F32 = F32()
+    reserved_f32_5: F32 = F32()
+    reserved_f32_6: F32 = F32()
+    reserved_f32_7: F32 = F32()
+    reserved_f32_8: F32 = F32()
+    reserved_f32_9: F32 = F32()
+    reserved_f32_10: F32 = F32()
+    reserved_f32_11: F32 = F32()
+    reserved_f32_12: F32 = F32()
+    reserved_f32_13: F32 = F32()
+    reserved_f32_14: F32 = F32()
+    reserved_f32_15: F32 = F32()
+    reserved_f32_16: F32 = F32()
+    reserved_f32_17: F32 = F32()
+    reserved_f32_18: F32 = F32()
+    reserved_f32_19: F32 = F32()
+    reserved_f32_20: F32 = F32()
+    reserved_f32_21: F32 = F32()
+    reserved_f32_22: F32 = F32()
+    reserved_f32_23: F32 = F32()
+    reserved_f32_24: F32 = F32()
+    reserved_f32_25: F32 = F32()
+    reserved_f32_26: F32 = F32()
+    reserved_f32_27: F32 = F32()
+    reserved_f32_28: F32 = F32()
+    reserved_f32_29: F32 = F32()
+    reserved_f32_30: F32 = F32()
+    reserved_f32_31: F32 = F32()
+    reserved_f32_32: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
+
+@dataclass
 class Cmd177Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
@@ -1095,14 +1154,13 @@ class Cmd196Reply (PayloadSequence):
 class Cmd200Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: Ascii = Ascii(50)
+    reserved_u8_0: U8 = U8()
+    reserved_u8_1: U8 = U8()
 
     @classmethod
     def create(cls, device: HartDevice):
-        payload = cls(
+        return cls(
             device_status=device.device_status)
-        payload.reserved_0.set_value('\0' * 50)
-        return payload
 
 @dataclass
 class Cmd202Reply (PayloadSequence):
