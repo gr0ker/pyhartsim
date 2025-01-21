@@ -83,8 +83,8 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd105Reply.create(device)
     elif command_number == 128:
         payload = Cmd128Reply.create(device)
-    elif command_number == 133:
-        payload = Cmd133Reply.create(device)
+    elif command_number == 130:
+        payload = Cmd130Reply.create(device)
     elif command_number == 136:
         request = Cmd136Request()
         request.deserialize(iter(data))
@@ -170,7 +170,7 @@ class Cmd0Hart7Reply (PayloadSequence):
     expanded_device_type: U16 = U16()
     request_preambles: U8 = U8(5)
     universal_revision: U8 = U8(7)
-    device_revision: U8 = U8(7)
+    device_revision: U8 = U8(0x0c)
     software_revision: U8 = U8(3)
     hardware_revision_signaling_code: U8 = U8(0x64)
     flags: U8 = U8()
@@ -179,8 +179,8 @@ class Cmd0Hart7Reply (PayloadSequence):
     max_device_variables: U8 = U8(1)
     config_change_counter: U16 = U16()
     extended_device_status: U8 = U8()
-    manufacturer_code: U16 = U16(0x0099)
-    private_label_distributor: U16 = U16(0x0099)
+    manufacturer_code: U16 = U16(0x0037)
+    private_label_distributor: U16 = U16(0x0037)
     device_profile: U8 = U8()
 
     @classmethod
@@ -896,6 +896,23 @@ class Cmd128Reply (PayloadSequence):
         payload.reserved_0.set_value('\0' * 31)
         return payload
 
+@dataclass
+class Cmd130Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    reserved_0: F32 = F32()
+    reserved_1: U8 = U8()
+    reserved_2: U8 = U8()
+    reserved_3: F32 = F32()
+    reserved_4: F32 = F32()
+    reserved_5: U8 = U8()
+    reserved_6: U8 = U8()
+    ext_sw_mode: U8 = U8(1)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status)
 
 @dataclass
 class Cmd133Reply (PayloadSequence):
