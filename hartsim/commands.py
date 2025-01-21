@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import math
+import time
 from .payloads import F32, U16, U24, U32, U8, Ascii, GreedyU8Array, PackedAscii
 from .payloads import PayloadSequence
 from .devices import HartDevice
@@ -217,7 +219,7 @@ class Cmd2Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status,
-            loop_current=device.loop_current,
+            loop_current=F32(3.5 + (1 + math.sin(time.time() / 10)) / 2 * 17),
             percent_of_range=device.percent_of_range)
 
 
@@ -612,11 +614,11 @@ class Cmd15Reply (PayloadSequence):
     reserved_0: U8 = U8()
     reserved_1: U8 = U8()
     units: U8 = U8(12)
-    reserved_2: U8 = U8()
+    urv: U8 = U8(250)
+    lrv: U32 = U32(0)
+    reserved_2: U32 = U32()
     reserved_3: U32 = U32()
     reserved_4: U32 = U32()
-    reserved_5: U32 = U32()
-    reserved_6: U24 = U24()
 
     @classmethod
     def create(cls, device: HartDevice):
@@ -786,10 +788,10 @@ class Cmd54Reply (PayloadSequence):
     device_variable_code: U8 = U8()
     device_variable_sensor_serial_number: U24 = U24()
     device_variable_units: U8 = U8()
-    device_variable_usl: F32 = F32()
-    device_variable_lsl: F32 = F32()
+    device_variable_usl: F32 = F32(250)
+    device_variable_lsl: F32 = F32(0)
     device_variable_damping: F32 = F32()
-    device_variable_min_span: F32 = F32()
+    device_variable_min_span: F32 = F32(10)
     device_variable_classification: U8 = U8()
     device_variable_family: U8 = U8()
     device_variable_update_period: U32 = U32()
