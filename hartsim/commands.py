@@ -202,6 +202,7 @@ class Cmd1Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
+        device.update_variables()
         return cls(
             device_status=device.device_status,
             pv_units=device.device_variables[device.dynamic_variables[0]].units,
@@ -217,9 +218,10 @@ class Cmd2Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
+        device.update_variables()
         return cls(
             device_status=device.device_status,
-            loop_current=F32(3.5 + (1 + math.sin(time.time() / 10)) / 2 * 17),
+            loop_current=device.loop_current,
             percent_of_range=device.percent_of_range)
 
 
@@ -239,6 +241,7 @@ class Cmd3Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice):
+        device.update_variables()
         return cls(
             device_status=device.device_status,
             loop_current=device.loop_current,
@@ -347,6 +350,8 @@ class Cmd9Reply (PayloadSequence):
 
     @classmethod
     def create(cls, device: HartDevice, request: Cmd9Request):
+        device.update_variables()
+
         payload = cls(
             device_status=device.device_status,
             extended_device_status=device.extended_device_status)
@@ -614,8 +619,8 @@ class Cmd15Reply (PayloadSequence):
     reserved_0: U8 = U8()
     reserved_1: U8 = U8()
     units: U8 = U8(12)
-    urv: U8 = U8(250)
-    lrv: U32 = U32(0)
+    urv: F32 = F32(250)
+    lrv: F32 = F32(0)
     reserved_2: U32 = U32()
     reserved_3: U32 = U32()
     reserved_4: U32 = U32()

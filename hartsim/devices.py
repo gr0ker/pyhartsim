@@ -1,3 +1,5 @@
+import math
+import time
 from dataclasses import dataclass
 from .payloads import F32, U16, U24, U8, Ascii, PackedAscii
 
@@ -69,3 +71,14 @@ class HartDevice:
     #     2: 2,
     #     3: 3,
     # }
+
+    def update_variables(self):
+        self.loop_current.set_value(3.5 + (1 + math.sin(time.time() / 36)) / 2 * 17)
+        min_value = -5.
+        max_value = 255.
+        values_range = max_value - min_value
+        index = 0
+        for variable in self.device_variables.values():
+            phase = 2 * math.pi * index / len(self.device_variables)
+            variable.value.set_value(min_value + (1 + math.sin((time.time() - phase) / 32)) / 2 * values_range)
+            index = index + 1
