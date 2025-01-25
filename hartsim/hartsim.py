@@ -1,3 +1,5 @@
+import sys
+
 import serial
 import time
 
@@ -25,22 +27,22 @@ frameBuilder = HartFrameBuilder()
 
 device3051 = HartDevice(
     device_variables={
-        0: DeviceVariable(U8(12), U8(12), F32(1.2345), U8(65), U8(192)),
-        1: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
-        2: DeviceVariable(U8(244), U8(244), F32(45.67), U8(0), U8(192)),
-        3: DeviceVariable(U8(242), U8(242), F32(4567.8), U8(0), U8(192)),
-        4: DeviceVariable(U8(45), U8(45), F32(5.6789), U8(0), U8(192)),
-        5: DeviceVariable(U8(41), U8(41), F32(67.890), U8(0), U8(192)),
-        6: DeviceVariable(U8(244), U8(244), F32(67.890), U8(0), U8(192)),
-        7: DeviceVariable(U8(244), U8(244), F32(67.890), U8(0), U8(192)),
-        8: DeviceVariable(U8(244), U8(244), F32(67.890), U8(0), U8(192)),
-        9: DeviceVariable(U8(244), U8(244), F32(67.890), U8(0), U8(192)),
-        244: DeviceVariable(U8(57), U8(57), F32(56.7890), U8(0), U8(192)),
-        245: DeviceVariable(U8(39), U8(39), F32(4.5678), U8(0), U8(192)),
-        246: DeviceVariable(U8(12), U8(12), F32(1.2345), U8(65), U8(192)),
-        247: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
-        248: DeviceVariable(U8(241), U8(241), F32(345.67), U8(0), U8(192)),
-        249: DeviceVariable(U8(244), U8(244), F32(4567.8), U8(0), U8(192)),
+        0: DeviceVariable(U8(12), U8(12), F32(1.2345), F32(sys.float_info.min), F32(sys.float_info.max), U8(65), U8(192)),
+        1: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        2: DeviceVariable(U8(244), U8(244), F32(45.67), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        3: DeviceVariable(U8(242), U8(242), F32(4567.8), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        4: DeviceVariable(U8(45), U8(45), F32(5.6789), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        5: DeviceVariable(U8(41), U8(41), F32(67.890), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        6: DeviceVariable(U8(244), U8(244), F32(67.890), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        7: DeviceVariable(U8(244), U8(244), F32(67.890), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        8: DeviceVariable(U8(244), U8(244), F32(67.890), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        9: DeviceVariable(U8(244), U8(244), F32(67.890), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        244: DeviceVariable(U8(57), U8(57), F32(56.7890), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        245: DeviceVariable(U8(39), U8(39), F32(4.5678), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        246: DeviceVariable(U8(12), U8(12), F32(1.2345), F32(sys.float_info.min), F32(sys.float_info.max), U8(65), U8(192)),
+        247: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        248: DeviceVariable(U8(241), U8(241), F32(345.67), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        249: DeviceVariable(U8(244), U8(244), F32(4567.8), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
     },
     dynamic_variables={
         0: 0,
@@ -60,14 +62,14 @@ device3051 = HartDevice(
 
 device150 = HartDevice(
     device_variables={
-        0: DeviceVariable(U8(12), U8(12), F32(1.2345), U8(65), U8(192)),
-        1: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
-        244: DeviceVariable(U8(57), U8(57), F32(56.7890), U8(0), U8(192)),
-        245: DeviceVariable(U8(39), U8(39), F32(4.5678), U8(0), U8(192)),
-        246: DeviceVariable(U8(12), U8(12), F32(1.2345), U8(65), U8(192)),
-        247: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
-        248: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
-        249: DeviceVariable(U8(32), U8(32), F32(23.456), U8(0), U8(192)),
+        0: DeviceVariable(U8(12), U8(12), F32(1.2345), F32(sys.float_info.min), F32(sys.float_info.max), U8(65), U8(192)),
+        1: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        244: DeviceVariable(U8(57), U8(57), F32(56.7890), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        245: DeviceVariable(U8(39), U8(39), F32(4.5678), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        246: DeviceVariable(U8(12), U8(12), F32(1.2345), F32(sys.float_info.min), F32(sys.float_info.max), U8(65), U8(192)),
+        247: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        248: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        249: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
     },
     dynamic_variables={
         0: 0,

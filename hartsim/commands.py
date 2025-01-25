@@ -112,9 +112,13 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
     elif command_number == 200:
         payload = Cmd200Reply.create(device)
     elif command_number == 202:
-        payload = Cmd202Reply.create(device)
+        request = Cmd202Request()
+        request.deserialize(iter(data))
+        payload = Cmd202Reply.create(device, request)
     elif command_number == 203:
-        payload = Cmd203Reply.create(device)
+        request = Cmd203Request()
+        request.deserialize(iter(data))
+        payload = Cmd203Reply.create(device, request)
     elif command_number == 216:
         payload = Cmd216Reply.create(device)
     elif command_number == 217:
@@ -1112,29 +1116,80 @@ class Cmd200Reply (PayloadSequence):
         return payload
 
 @dataclass
+class Cmd202Request (PayloadSequence):
+    index: U8 = U8()
+
+@dataclass
 class Cmd202Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: Ascii = Ascii(50)
+    index: U8 = U8()
+    name: Ascii = Ascii(14)
+    units: U8 = U8()
+    mode: U8 = U8(1)
+    variable: U8 = U8()
+    trigger: U8 = U8(0)
+    high: F32 = F32(100)
+    low: F32 = F32(50)
+    suppression: U8 = U8(0)
+    delay: F32 = F32(0)
+    dead_band: F32 = F32(0)
+    high_with_dead_band: F32 = F32(100)
+    low_with_dead_band: F32 = F32(50)
 
     @classmethod
-    def create(cls, device: HartDevice):
+    def create(cls, device: HartDevice, request: Cmd202Request):
         payload = cls(
             device_status=device.device_status)
-        payload.reserved_0.set_value('\0' * 50)
+
+        if request.index.get_value() == 0:
+            variable = 0
+        else:
+            variable = 1
+
+        payload.index.set_value(request.index.get_value())
+        payload.variable.set_value(variable)
+        payload.units.set_value(device.device_variables[variable].units.get_value())
+
+        payload.name.set_value(f'My process alert {request.index.get_value()}')
         return payload
+
+@dataclass
+class Cmd203Request (PayloadSequence):
+    index: U8 = U8()
 
 @dataclass
 class Cmd203Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: Ascii = Ascii(50)
+    index: U8 = U8()
+    units: U8 = U8()
+    value: F32 = F32()
+    status: U8 = U8()
+    max: F32 = F32()
+    min: F32 = F32()
+    time: Ascii = Ascii(23)
 
     @classmethod
-    def create(cls, device: HartDevice):
+    def create(cls, device: HartDevice, request: Cmd203Request):
         payload = cls(
             device_status=device.device_status)
-        payload.reserved_0.set_value('\0' * 50)
+
+        device.update_variables()
+
+        if request.index.get_value() == 0:
+            variable = 0
+        else:
+            variable = 1
+
+        payload.index.set_value(request.index.get_value())
+        payload.units.set_value(device.device_variables[variable].units.get_value())
+        payload.value.set_value(device.device_variables[variable].value.get_value())
+        payload.status.set_value(device.device_variables[variable].status.get_value())
+        payload.max.set_value(device.device_variables[variable].max_seen.get_value())
+        payload.min.set_value(device.device_variables[variable].min_seen.get_value())
+
+        payload.time.set_value('\0' * 50)
         return payload
 
 @dataclass

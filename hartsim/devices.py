@@ -1,4 +1,5 @@
 import math
+import sys
 import time
 from dataclasses import dataclass
 from .payloads import F32, U16, U24, U8, Ascii, PackedAscii
@@ -9,6 +10,8 @@ class DeviceVariable:
     units: U8 = U8()
     alternate_units: U8 = U8()
     value: F32 = F32()
+    max_seen: F32 = F32(sys.float_info.min)
+    min_seen: F32 = F32(sys.float_info.max)
     classification: U8 = U8()
     status: U8 = U8()
 
@@ -80,5 +83,12 @@ class HartDevice:
         index = 0
         for variable in self.device_variables.values():
             phase = 2 * math.pi * index / len(self.device_variables)
-            variable.value.set_value(min_value + (1 + math.sin((time.time() - phase) / 32)) / 2 * values_range)
+            new_value = min_value + (1 + math.sin((time.time() - phase) / 32)) / 2 * values_range
+            variable.value.set_value(new_value)
+
+            if variable.min_seen.get_value() > new_value:
+                variable.min_seen.set_value(new_value)
+            if variable.max_seen.get_value() < new_value:
+                variable.max_seen.set_value(new_value)
+
             index = index + 1
