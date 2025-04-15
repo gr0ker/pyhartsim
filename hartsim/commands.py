@@ -65,6 +65,12 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd46Reply.create(device, request)
     elif command_number == 48:
         payload = Cmd48Reply.create(device)
+    elif command_number == 50:
+        payload = Cmd50Reply.create(device)
+    elif command_number == 51:
+        request = Cmd51Request()
+        request.deserialize(iter(data))
+        payload = Cmd51Reply.create(device, request)
     elif command_number == 53:
         request = Cmd53Request()
         request.deserialize(iter(data))
@@ -209,8 +215,8 @@ class Cmd1Reply (PayloadSequence):
         device.update_variables()
         return cls(
             device_status=device.device_status,
-            pv_units=device.device_variables[device.dynamic_variables[0]].units,
-            pv_value=device.device_variables[device.dynamic_variables[0]].value,)
+            pv_units=device.device_variables[device.dynamic_variables[device.pv_selection.get_value()]].units,
+            pv_value=device.device_variables[device.dynamic_variables[device.pv_selection.get_value()]].value,)
 
 
 @dataclass
@@ -249,14 +255,14 @@ class Cmd3Reply (PayloadSequence):
         return cls(
             device_status=device.device_status,
             loop_current=device.loop_current,
-            pv_units=device.device_variables[device.dynamic_variables[0]].units,
-            pv_value=device.device_variables[device.dynamic_variables[0]].value,
-            sv_units=device.device_variables[device.dynamic_variables[1]].units,
-            sv_value=device.device_variables[device.dynamic_variables[1]].value,
-            tv_units=device.device_variables[device.dynamic_variables[2]].units,
-            tv_value=device.device_variables[device.dynamic_variables[2]].value,
-            qv_units=device.device_variables[device.dynamic_variables[3]].units,
-            qv_value=device.device_variables[device.dynamic_variables[3]].value)
+            pv_units=device.device_variables[device.dynamic_variables[device.pv_selection.get_value()]].units,
+            pv_value=device.device_variables[device.dynamic_variables[device.pv_selection.get_value()]].value,
+            sv_units=device.device_variables[device.dynamic_variables[device.sv_selection.get_value()]].units,
+            sv_value=device.device_variables[device.dynamic_variables[device.sv_selection.get_value()]].value,
+            tv_units=device.device_variables[device.dynamic_variables[device.tv_selection.get_value()]].units,
+            tv_value=device.device_variables[device.dynamic_variables[device.tv_selection.get_value()]].value,
+            qv_units=device.device_variables[device.dynamic_variables[device.qv_selection.get_value()]].units,
+            qv_value=device.device_variables[device.dynamic_variables[device.qv_selection.get_value()]].value)
 
 
 @dataclass
@@ -287,10 +293,10 @@ class Cmd8Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status,
-            pv_classification=device.device_variables[device.dynamic_variables[0]].classification,
-            sv_classification=device.device_variables[device.dynamic_variables[1]].classification,
-            tv_classification=device.device_variables[device.dynamic_variables[2]].classification,
-            qv_classification=device.device_variables[device.dynamic_variables[3]].classification)
+            pv_classification=device.device_variables[device.dynamic_variables[device.pv_selection.get_value()]].classification,
+            sv_classification=device.device_variables[device.dynamic_variables[device.sv_selection.get_value()]].classification,
+            tv_classification=device.device_variables[device.dynamic_variables[device.tv_selection.get_value()]].classification,
+            qv_classification=device.device_variables[device.dynamic_variables[device.qv_selection.get_value()]].classification)
 
 
 @dataclass
@@ -633,7 +639,9 @@ class Cmd15Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status,
-            units=device.device_variables[0].units)
+            units=device.device_variables[device.pv_selection.get_value()].units,
+            lrv=device.device_variables[device.pv_selection.get_value()].lrv,
+            urv=device.device_variables[device.pv_selection.get_value()].urv)
 
 
 @dataclass
@@ -762,6 +770,56 @@ class Cmd48Reply (PayloadSequence):
             device.device_specific_status_0.get_value())
         device.device_specific_status_0.set_value(new_device_specific_status_0)
 
+        return payload
+
+@dataclass
+class Cmd50Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    pv_selection: U8 = U8()
+    sv_selection: U8 = U8()
+    tv_selection: U8 = U8()
+    qv_selection: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        payload = cls(
+            device_status=device.device_status,
+            pv_selection=device.pv_selection,
+            sv_selection=device.sv_selection,
+            tv_selection=device.tv_selection,
+            qv_selection=device.qv_selection)
+        return payload
+
+@dataclass
+class Cmd51Request (PayloadSequence):
+    pv_selection: U8 = U8()
+    sv_selection: U8 = U8()
+    tv_selection: U8 = U8()
+    qv_selection: U8 = U8()
+
+
+@dataclass
+class Cmd51Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    pv_selection: U8 = U8()
+    sv_selection: U8 = U8()
+    tv_selection: U8 = U8()
+    qv_selection: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd51Request):
+        device.pv_selection.set_value(request.pv_selection.get_value())
+        device.sv_selection.set_value(request.sv_selection.get_value())
+        device.tv_selection.set_value(request.tv_selection.get_value())
+        device.qv_selection.set_value(request.qv_selection.get_value())
+        payload = cls(
+            device_status=device.device_status,
+            pv_selection=device.pv_selection,
+            sv_selection=device.sv_selection,
+            tv_selection=device.tv_selection,
+            qv_selection=device.qv_selection)
         return payload
 
 @dataclass

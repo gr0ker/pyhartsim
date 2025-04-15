@@ -12,6 +12,8 @@ class DeviceVariable:
     value: F32 = F32()
     max_seen: F32 = F32(sys.float_info.min)
     min_seen: F32 = F32(sys.float_info.max)
+    urv: F32 = F32()
+    lrv: F32 = F32()
     classification: U8 = U8()
     status: U8 = U8()
 
@@ -50,6 +52,10 @@ class HartDevice:
     low_alarm_level: F32 = F32(3.4)
     high_saturation_level: F32 = F32(22.8)
     low_saturation_level: F32 = F32(3.9)
+    pv_selection: U8 = U8(0)
+    sv_selection: U8 = U8(0)
+    tv_selection: U8 = U8(0)
+    qv_selection: U8 = U8(0)
     # Device Variables
     # pressure: DeviceVariable = DeviceVariable(12, 1.2345, 65, 192)
     # temperature: DeviceVariable = DeviceVariable(32, 23.456, 0, 192)
