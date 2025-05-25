@@ -1,7 +1,8 @@
 import math
 import sys
 import time
-from dataclasses import dataclass
+from array import array
+from dataclasses import dataclass, field
 from .payloads import F32, U16, U24, U8, Ascii, PackedAscii
 
 
@@ -56,6 +57,12 @@ class HartDevice:
     sv_selection: U8 = U8(0)
     tv_selection: U8 = U8(0)
     qv_selection: U8 = U8(0)
+    volumeSetupNumStrapWritePoints: U8 = U8(4)
+    volumeSetupTankWriteType: U8 = U8(5)
+    volumeSetupTankWriteLength: F32 = F32(100)
+    volumeSetupTankWriteRadius: F32 = F32(20)
+    strappingTableLevel: array = field(default_factory=lambda: array('f', [i * 10 for i in range(1, 54)]))
+    strappingTableVolume: array = field(default_factory=lambda: array('f', [i * 15 for i in range(1, 54)]))
     # Device Variables
     # pressure: DeviceVariable = DeviceVariable(12, 1.2345, 65, 192)
     # temperature: DeviceVariable = DeviceVariable(32, 23.456, 0, 192)

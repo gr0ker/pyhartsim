@@ -105,12 +105,24 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd140Reply.create(device, request)
     elif command_number == 148:
         payload = Cmd148Reply.create(device)
+    elif command_number == 157:
+        payload = Cmd157Reply.create(device)
+    elif command_number == 158:
+        request = Cmd158Request()
+        request.deserialize(iter(data))
+        payload = Cmd158Reply.create(device, request)
+    elif command_number == 159:
+        request = Cmd159Request()
+        request.deserialize(iter(data))
+        payload = Cmd159Reply.create(device, request)
     elif command_number == 160:
         payload = Cmd160Reply.create(device)
     elif command_number == 161:
         payload = Cmd161Reply.create(device)
     elif command_number == 162:
-        payload = Cmd162Reply.create(device)
+        request = Cmd162Request()
+        request.deserialize(iter(data))
+        payload = Cmd162Reply.create(device, request)
     elif command_number == 177:
         payload = Cmd177Reply.create(device)
     elif command_number == 196:
@@ -1069,12 +1081,114 @@ class Cmd148Reply (PayloadSequence):
         return cls(
             device_status=device.device_status)
 
+@dataclass
+class Cmd157Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    levelUnits: U8 = U8()
+    pressureUnits: U8 = U8()
+    levelSetupMaxLevel: F32 = F32(-100)
+    levelSetupPressureAtMaxLevel: F32 = F32(-100)
+    levelSetupMinLevel: F32 = F32(500)
+    levelSetupPressureAtMinLevel: F32 = F32(500)
+    levelUsl: F32 = F32(500)
+    levelLsl: F32 = F32(-100)
+    levelAdjustment: F32 = F32(0)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status,
+            levelUnits=device.device_variables[4].units,
+            pressureUnits=device.device_variables[0].units)
+
+@dataclass
+class Cmd158Request (PayloadSequence):
+    volumeSetupNumStrapWritePoints: U8 = U8()
+    volumeSetupTankWriteType: U8 = U8()
+    volumeSetupTankWriteLength: F32 = F32()
+    volumeSetupTankWriteRadius: F32 = F32()
+
+@dataclass
+class Cmd158Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    volumeSetupNumStrapWritePoints: U8 = U8()
+    volumeSetupTankWriteType: U8 = U8()
+    volumeSetupTankWriteLength: F32 = F32()
+    volumeSetupTankWriteRadius: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd158Request):
+        device.volumeSetupNumStrapWritePoints.set_value(request.volumeSetupNumStrapWritePoints.get_value())
+        device.volumeSetupTankWriteType.set_value(request.volumeSetupTankWriteType.get_value())
+        device.volumeSetupTankWriteLength.set_value(request.volumeSetupTankWriteLength.get_value())
+        device.volumeSetupTankWriteRadius.set_value(request.volumeSetupTankWriteRadius.get_value())
+        return cls(
+            device_status=device.device_status,
+            volumeSetupNumStrapWritePoints=device.volumeSetupNumStrapWritePoints,
+            volumeSetupTankWriteType=device.volumeSetupTankWriteType,
+            volumeSetupTankWriteLength=device.volumeSetupTankWriteLength,
+            volumeSetupTankWriteRadius=device.volumeSetupTankWriteRadius)
+
+@dataclass
+class Cmd159Request (PayloadSequence):
+    writeStrappingPointSet: U8 = U8()
+    levelConfigUnits: U8 = U8()
+    volumeConfigUnits: U8 = U8()
+    levelA: F32 = F32()
+    levelB: F32 = F32()
+    levelC: F32 = F32()
+    levelD: F32 = F32()
+    volumeA: F32 = F32()
+    volumeB: F32 = F32()
+    volumeC: F32 = F32()
+    volumeD: F32 = F32()
+
+@dataclass
+class Cmd159Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    writeStrappingPointSet: U8 = U8()
+    levelConfigUnits: U8 = U8()
+    volumeConfigUnits: U8 = U8()
+    levelA: F32 = F32()
+    levelB: F32 = F32()
+    levelC: F32 = F32()
+    levelD: F32 = F32()
+    volumeA: F32 = F32()
+    volumeB: F32 = F32()
+    volumeC: F32 = F32()
+    volumeD: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd159Request):
+        device.strappingTableLevel[request.writeStrappingPointSet.get_value() * 4 + 0] = request.levelA.get_value()
+        device.strappingTableLevel[request.writeStrappingPointSet.get_value() * 4 + 1] = request.levelB.get_value()
+        device.strappingTableLevel[request.writeStrappingPointSet.get_value() * 4 + 2] = request.levelC.get_value()
+        device.strappingTableLevel[request.writeStrappingPointSet.get_value() * 4 + 3] = request.levelD.get_value()
+        device.strappingTableVolume[request.writeStrappingPointSet.get_value() * 4 + 0] = request.volumeA.get_value()
+        device.strappingTableVolume[request.writeStrappingPointSet.get_value() * 4 + 1] = request.volumeB.get_value()
+        device.strappingTableVolume[request.writeStrappingPointSet.get_value() * 4 + 2] = request.volumeC.get_value()
+        device.strappingTableVolume[request.writeStrappingPointSet.get_value() * 4 + 3] = request.volumeD.get_value()
+        return cls(
+            device_status=device.device_status,
+            writeStrappingPointSet=request.writeStrappingPointSet,
+            levelConfigUnits=request.levelConfigUnits,
+            volumeConfigUnits=request.volumeConfigUnits,
+            levelA=request.levelA,
+            levelB=request.levelB,
+            levelC=request.levelC,
+            levelD=request.levelD,
+            volumeA=request.volumeA,
+            volumeB=request.volumeB,
+            volumeC=request.volumeC,
+            volumeD=request.volumeD)
 
 @dataclass
 class Cmd160Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    reserved_0: PackedAscii = PackedAscii(32)
 
     @classmethod
     def create(cls, device: HartDevice):
@@ -1088,23 +1202,34 @@ class Cmd161Reply (PayloadSequence):
     device_status: U8 = U8()
     levelUnits: U8 = U8()
     volumeUnits: U8 = U8()
-    volumeSetupNumStrapReadPoints: U8 = U8(8)
-    tank_type: U8 = U8(5)  # custom
-    reserved_1: Ascii = Ascii(12)
+    volumeSetupNumStrapReadPoints: U8 = U8()
+    volumeSetupTankReadType: U8 = U8()
+    volumeSetupTankReadLength: F32 = F32()
+    volumeSetupTankReadRadius: F32 = F32()
+    volumeUsl: F32 = F32(500)
 
     @classmethod
     def create(cls, device: HartDevice):
         payload = cls(
-            device_status=device.device_status)
-        payload.reserved_1.set_value('\0' * 12)
+            device_status=device.device_status,
+            levelUnits=device.device_variables[4].units,
+            volumeUnits=device.device_variables[5].units,
+            volumeSetupNumStrapReadPoints=device.volumeSetupNumStrapWritePoints,
+            volumeSetupTankReadType=device.volumeSetupTankWriteType,
+            volumeSetupTankReadLength=device.volumeSetupTankWriteLength,
+            volumeSetupTankReadRadius=device.volumeSetupTankWriteRadius)
         return payload
 
+
+@dataclass
+class Cmd162Request (PayloadSequence):
+    readStrappingPointSet: U8 = U8()
 
 @dataclass
 class Cmd162Reply (PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    readStrappingPointSet_local: U8 = U8()
+    readStrappingPointSet: U8 = U8()
     levelUnits: U8 = U8()
     volumeUnits: U8 = U8()
     level_a: F32 = F32(10)
@@ -1129,9 +1254,32 @@ class Cmd162Reply (PayloadSequence):
     volume_j: F32 = F32(1.0)
 
     @classmethod
-    def create(cls, device: HartDevice):
+    def create(cls, device: HartDevice, request: Cmd162Request):
         return cls(
-            device_status=device.device_status)
+            device_status=device.device_status,
+            readStrappingPointSet=request.readStrappingPointSet,
+            levelUnits=device.device_variables[4].units,
+            volumeUnits=device.device_variables[5].units,
+            level_a=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 0]),
+            level_b=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 1]),
+            level_c=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 2]),
+            level_d=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 3]),
+            level_e=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 4]),
+            level_f=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 5]),
+            level_g=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 6]),
+            level_h=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 7]),
+            level_i=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 8]),
+            level_j=F32(device.strappingTableLevel[request.readStrappingPointSet.get_value() * 10 + 9]),
+            volume_a=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 0]),
+            volume_b=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 1]),
+            volume_c=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 2]),
+            volume_d=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 3]),
+            volume_e=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 4]),
+            volume_f=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 5]),
+            volume_g=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 6]),
+            volume_h=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 7]),
+            volume_i=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 8]),
+            volume_j=F32(device.strappingTableVolume[request.readStrappingPointSet.get_value() * 10 + 9]))
 
 @dataclass
 class Cmd177Reply (PayloadSequence):
