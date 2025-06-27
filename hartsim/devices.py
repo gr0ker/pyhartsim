@@ -63,6 +63,8 @@ class HartDevice:
     volumeSetupTankWriteRadius: F32 = F32(20)
     strappingTableLevel: array = field(default_factory=lambda: array('f', [i * 10 for i in range(1, 54)]))
     strappingTableVolume: array = field(default_factory=lambda: array('f', [i * 15 for i in range(1, 54)]))
+    simulated_variables: dict[int, float] = field(default_factory=dict[int, float])
+    pv_damping: F32 = F32(1.23)
     # Device Variables
     # pressure: DeviceVariable = DeviceVariable(12, 1.2345, 65, 192)
     # temperature: DeviceVariable = DeviceVariable(32, 23.456, 0, 192)
@@ -94,10 +96,15 @@ class HartDevice:
         max_value = 255.
         values_range = max_value - min_value
         index = 0
-        for variable in self.device_variables.values():
+        for variableCode in self.device_variables.keys():
             phase = 2 * math.pi * index / len(self.device_variables)
             new_value = min_value + (1 + math.sin((time.time() - phase) / 32)) / 2 * values_range
-            variable.value.set_value(new_value)
+            variable = self.device_variables[variableCode]
+
+            if variableCode in self.simulated_variables.keys():
+                self.simulated_variables[variableCode] = new_value
+            else:
+                variable.value.set_value(new_value)
 
             if variable.min_seen.get_value() > new_value:
                 variable.min_seen.set_value(new_value)

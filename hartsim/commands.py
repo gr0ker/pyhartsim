@@ -83,6 +83,10 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd72Reply.create(device)
     elif command_number == 76:
         payload = Cmd76Reply.create(device)
+    elif command_number == 79:
+        request = Cmd79Request()
+        request.deserialize(iter(data))
+        payload = Cmd79Reply.create(device, request)
     elif command_number == 90:
         payload = Cmd90Reply.create(device)
     elif command_number == 105:
@@ -643,7 +647,7 @@ class Cmd15Reply (PayloadSequence):
     units: U8 = U8(12)
     urv: F32 = F32(250)
     lrv: F32 = F32(0)
-    reserved_2: U32 = U32()
+    pv_damping: F32 = F32()
     reserved_3: U32 = U32()
     reserved_4: U32 = U32()
 
@@ -653,7 +657,8 @@ class Cmd15Reply (PayloadSequence):
             device_status=device.device_status,
             units=device.device_variables[device.pv_selection.get_value()].units,
             lrv=device.device_variables[device.pv_selection.get_value()].lrv,
-            urv=device.device_variables[device.pv_selection.get_value()].urv)
+            urv=device.device_variables[device.pv_selection.get_value()].urv,
+            pv_damping=device.pv_damping)
 
 
 @dataclass
@@ -670,16 +675,17 @@ class Cmd20Reply (PayloadSequence):
 
 @dataclass
 class Cmd34Request (PayloadSequence):
-    pv_damping: F32 = U32()
+    pv_damping: F32 = F32()
 
 @dataclass
 class Cmd34Reply(PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
-    pv_damping: F32 = U32()
+    pv_damping: F32 = F32()
 
     @classmethod
     def create(cls, device: HartDevice, request: Cmd34Request):
+        device.pv_damping.set_value(request.pv_damping.get_value())
         return cls(
             device_status=device.device_status,
             pv_damping=request.pv_damping)
@@ -850,6 +856,8 @@ class Cmd53Reply(PayloadSequence):
     def create(cls, device: HartDevice, request: Cmd53Request):
         device.device_variables[request.device_variable_code.get_value()].units.set_value(
             request.device_variable_units.get_value())
+        device.device_variables[request.device_variable_code.get_value()].alternate_units.set_value(
+            request.device_variable_units.get_value())
         return cls(
             device_status=device.device_status,
             device_variable_code=request.device_variable_code,
@@ -889,6 +897,9 @@ class Cmd54Reply (PayloadSequence):
         payload.device_variable_classification.set_value(
             device.device_variables[request.device_variable_code.get_value()].classification.get_value())
 
+        payload.device_variable_damping.set_value(
+            device.pv_damping.get_value())
+
         return payload
 
 @dataclass
@@ -912,6 +923,56 @@ class Cmd76Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status)
+
+@dataclass
+class Cmd79Request (PayloadSequence):
+    device_variable_code: U8 = U8()
+    simulated: U8 = U8()
+    digital_units: U8 = U8()
+    digital_value: F32 = F32()
+    digital_status: U8 = U8()
+
+
+@dataclass
+class Cmd79Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    device_variable_code: U8 = U8()
+    simulated: U8 = U8()
+    digital_units: U8 = U8()
+    digital_value: F32 = F32()
+    digital_status: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd79Request):
+        payload = cls(device_status=device.device_status)
+
+        variableCode = request.device_variable_code.get_value()
+
+        if request.simulated.get_value() != 0:
+            if variableCode not in device.simulated_variables.keys():
+                device.simulated_variables[variableCode] = device.device_variables[variableCode].value.get_value()
+            device.device_variables[variableCode].value.set_value(request.digital_value.get_value())
+        elif variableCode in device.simulated_variables.keys():
+            device.device_variables[variableCode].value.set_value(device.simulated_variables[variableCode])
+            device.simulated_variables.pop(variableCode)
+
+        payload.device_variable_code.set_value(
+            request.device_variable_code.get_value())
+
+        payload.simulated.set_value(
+            request.simulated.get_value())
+
+        payload.digital_units.set_value(
+            request.digital_units.get_value())
+
+        payload.digital_value.set_value(
+            request.digital_value.get_value())
+
+        payload.digital_status.set_value(
+            request.digital_status.get_value())
+
+        return payload
 
 
 @dataclass
