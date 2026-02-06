@@ -43,6 +43,10 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         payload = Cmd15Reply.create(device)
     elif command_number == 20 and device.universal_revision.get_value() >= 6:
         payload = Cmd20Reply.create(device)
+    elif command_number == 33:
+        request = Cmd33Request()
+        request.deserialize(iter(data))
+        payload = Cmd33Reply.create(device, request)
     elif command_number == 34:
         request = Cmd34Request()
         request.deserialize(iter(data))
@@ -174,7 +178,7 @@ class Cmd0Hart5Reply (PayloadSequence):
     expanded_device_type: U16 = U16()
     request_preambles: U8 = U8(5)
     universal_revision: U8 = U8(5)
-    device_revision: U8 = U8(11)
+    device_revision: U8 = U8(9)
     software_revision: U8 = U8(3)
     hardware_revision_signaling_code: U8 = U8(0x64)
     flags: U8 = U8()
@@ -674,6 +678,99 @@ class Cmd20Reply (PayloadSequence):
             long_tag=device.hart_long_tag)
 
 @dataclass
+class Cmd33Request (PayloadSequence):
+    device_variable_code_1: U8 = U8()
+    device_variable_code_2: U8 = U8()
+    device_variable_code_3: U8 = U8()
+    device_variable_code_4: U8 = U8()
+
+
+@dataclass
+class Cmd33Reply (PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    device_variable_code_1: U8 = U8()
+    device_variable_units_1: U8 = U8()
+    device_variable_value_1: F32 = F32()
+    device_variable_code_2: U8 = U8()
+    device_variable_units_2: U8 = U8()
+    device_variable_value_2: F32 = F32()
+    device_variable_code_3: U8 = U8()
+    device_variable_units_3: U8 = U8()
+    device_variable_value_3: F32 = F32()
+    device_variable_code_4: U8 = U8()
+    device_variable_units_4: U8 = U8()
+    device_variable_value_4: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd33Request):
+        device.update_variables()
+
+        payload = cls(device_status=device.device_status)
+
+        payload.device_variable_code_1.set_value(
+            request.device_variable_code_1.get_value())
+
+        payload.device_variable_units_1.set_value(
+            device.device_variables[request.device_variable_code_1.get_value()].units.get_value())
+        payload.device_variable_value_1.set_value(
+            device.device_variables[request.device_variable_code_1.get_value()].value.get_value())
+
+        new_units = device.device_variables[request.device_variable_code_1.get_value(
+        )].alternate_units.get_value()
+        device.device_variables[request.device_variable_code_1.get_value()].alternate_units.set_value(
+            device.device_variables[request.device_variable_code_1.get_value()].units.get_value())
+        device.device_variables[request.device_variable_code_1.get_value(
+        )].units.set_value(new_units)
+
+        payload.device_variable_code_2.set_value(
+            request.device_variable_code_2.get_value())
+
+        payload.device_variable_units_2.set_value(
+            device.device_variables[request.device_variable_code_2.get_value()].units.get_value())
+        payload.device_variable_value_2.set_value(
+            device.device_variables[request.device_variable_code_2.get_value()].value.get_value())
+
+        new_units = device.device_variables[request.device_variable_code_2.get_value(
+        )].alternate_units.get_value()
+        device.device_variables[request.device_variable_code_2.get_value()].alternate_units.set_value(
+            device.device_variables[request.device_variable_code_2.get_value()].units.get_value())
+        device.device_variables[request.device_variable_code_2.get_value(
+        )].units.set_value(new_units)
+
+        payload.device_variable_code_3.set_value(
+            request.device_variable_code_3.get_value())
+
+        payload.device_variable_units_3.set_value(
+            device.device_variables[request.device_variable_code_3.get_value()].units.get_value())
+        payload.device_variable_value_3.set_value(
+            device.device_variables[request.device_variable_code_3.get_value()].value.get_value())
+
+        new_units = device.device_variables[request.device_variable_code_3.get_value(
+        )].alternate_units.get_value()
+        device.device_variables[request.device_variable_code_3.get_value()].alternate_units.set_value(
+            device.device_variables[request.device_variable_code_3.get_value()].units.get_value())
+        device.device_variables[request.device_variable_code_3.get_value(
+        )].units.set_value(new_units)
+
+        payload.device_variable_code_4.set_value(
+            request.device_variable_code_4.get_value())
+
+        payload.device_variable_units_4.set_value(
+            device.device_variables[request.device_variable_code_4.get_value()].units.get_value())
+        payload.device_variable_value_4.set_value(
+            device.device_variables[request.device_variable_code_4.get_value()].value.get_value())
+
+        new_units = device.device_variables[request.device_variable_code_4.get_value(
+        )].alternate_units.get_value()
+        device.device_variables[request.device_variable_code_4.get_value()].alternate_units.set_value(
+            device.device_variables[request.device_variable_code_4.get_value()].units.get_value())
+        device.device_variables[request.device_variable_code_4.get_value(
+        )].units.set_value(new_units)
+
+        return payload
+
+@dataclass
 class Cmd34Request (PayloadSequence):
     pv_damping: F32 = F32()
 
@@ -767,7 +864,7 @@ class Cmd48Reply (PayloadSequence):
     device_specific_status_1: U8 = U8()
     device_specific_status_2: U8 = U8()
     device_specific_status_3: U8 = U8(0x10)
-    device_specific_status_4: U8 = U8()
+    device_specific_status_4: U8 = U8(0x40)
     device_specific_status_5: U8 = U8()
     extended_fld_device_status: U8 = U8()
     reserved_0: U8 = U8()

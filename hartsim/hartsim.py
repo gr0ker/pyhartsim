@@ -56,20 +56,22 @@ device3051 = HartDevice(
     long_address=0x3FFFFFFFFF & 0x9972123456,
     expanded_device_type=U16(0x9972),
     device_id=U24(0x123456),
-    hart_tag=PackedAscii(8, "3051 r10"),
-    hart_long_tag=Ascii(32, "This is 3051 rev 10             "),
-    device_status=U8(0x10))
+    hart_tag=PackedAscii(8, "M150 r7"),
+    hart_long_tag=Ascii(32, "This is M150 rev 7              "),
+    device_status=U8(0x00))
 
 device150 = HartDevice(
     device_variables={
         0: DeviceVariable(U8(12), U8(12), F32(1.2345), F32(sys.float_info.min), F32(sys.float_info.max), U8(65), U8(192)),
         1: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        2: DeviceVariable(U8(240), U8(240), F32(5.6789), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
         244: DeviceVariable(U8(57), U8(57), F32(56.7890), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
         245: DeviceVariable(U8(39), U8(39), F32(4.5678), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
         246: DeviceVariable(U8(12), U8(12), F32(1.2345), F32(sys.float_info.min), F32(sys.float_info.max), U8(65), U8(192)),
         247: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
         248: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
         249: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(192)),
+        254: DeviceVariable(U8(250), U8(250), F32(float("nan")), F32(sys.float_info.min), F32(sys.float_info.max), U8(0), U8(30)),
     },
     dynamic_variables={
         0: 0,
@@ -79,11 +81,11 @@ device150 = HartDevice(
     },
     universal_revision=U8(5),
     polling_address=U8(1),
-    long_address=0x3FFFFFFFFF & 0x9979789ABC,
-    expanded_device_type=U16(0x9979),
+    long_address=0x3FFFFFFFFF & 0x2606789ABC,
+    expanded_device_type=U16(0x2606),
     device_id=U24(0x789ABC),
-    hart_tag=PackedAscii(8, "150 r10 "),
-    hart_long_tag=Ascii(32, "This is 150 rev 10              "))
+    hart_tag=PackedAscii(8, "3051 r9"),
+    hart_long_tag=Ascii(32, "This is 3051 rev 9        "))
 
 poll_map = {
     device3051.polling_address.get_value(): device3051,
