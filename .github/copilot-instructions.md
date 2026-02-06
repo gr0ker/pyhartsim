@@ -43,6 +43,10 @@ PyHartSim is a HART (Highway Addressable Remote Transducer Protocol) device simu
 
 - **payloads.py** - Binary payload serialization primitives. `U8`, `U16`, `U24`, `U32`, `F32` for numeric types. `Ascii`, `PackedAscii` for strings. `PayloadSequence` for composing complex payloads.
 
+- **logparser.py** - Log file parser for log-based simulation. Extracts request/response pairs from HART communication logs. `LogResponseProvider` provides round-robin response selection.
+
+- **logsim.py** - Log-based simulator entry point. Replays logged responses instead of simulating device logic. Matches requests exactly after stripping preambles.
+
 ### Data Flow
 
 1. Serial bytes arrive → `HartFrameBuilder.collect()` accumulates until frame complete
