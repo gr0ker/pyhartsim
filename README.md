@@ -22,8 +22,18 @@ class Configuration:
 
 ## Run
 
-Run the simulator:
+Run the device simulator:
 
 ```sh
 python -m hartsim.hartsim
 ```
+
+## Log-Based Simulation
+
+Replay responses from a captured HART communication log file:
+
+```sh
+python -m hartsim.logsim path/to/logfile.log
+```
+
+The log simulator parses request/response pairs from log files and matches incoming requests exactly (after stripping preambles). If multiple responses exist for the same request, they are returned in round-robin order.
