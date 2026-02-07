@@ -1,6 +1,4 @@
 from dataclasses import dataclass
-import math
-import time
 from .payloads import F32, U16, U24, U32, U8, Ascii, GreedyU8Array, PackedAscii
 from .payloads import PayloadSequence
 from .devices import HartDevice

@@ -68,6 +68,10 @@ class Cmd1Reply(PayloadSequence):
     pv_value: F32 = F32()
 ```
 
+## Workflow Requirements
+
+- **Always run `make ruff` (or `ruff check . --target-version=py312`) before committing** to ensure there are no linter errors. Fix any issues before pushing changes.
+
 ## Key Conventions
 
 - HART protocol uses big-endian byte order for multi-byte values
