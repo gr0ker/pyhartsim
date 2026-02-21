@@ -13,6 +13,24 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
         command_number = request.extended_command_number
         data = request.request_data
 
+    try:
+        payload = _dispatch_command(device, command_number, data)
+    except StopIteration:
+        payload = ErrorReply.create(device, U8(5))
+
+    if is_extended_command:
+        payload = Cmd31Reply.create(
+            device,
+            payload.response_code,
+            command_number,
+            # skip Response Code and Device Status
+            GreedyU8Array(bytearray(payload)[2:]))
+        command_number = 31
+
+    return list(payload)
+
+
+def _dispatch_command(device: HartDevice, command_number: int, data: bytearray):
     if command_number == 0:
         # TODO move logic to HartDevice class
         if device.universal_revision.get_value() == 5:
@@ -160,16 +178,7 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
     else:
         payload = ErrorReply.create(device, U8(64))
 
-    if is_extended_command:
-        payload = Cmd31Reply.create(
-            device,
-            payload.response_code,
-            command_number,
-            # skip Response Code and Device Status
-            GreedyU8Array(bytearray(payload)[2:]))
-        command_number = 31
-
-    return list(payload)
+    return payload
 
 
 @dataclass
