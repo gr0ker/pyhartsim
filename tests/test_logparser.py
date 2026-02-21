@@ -1,8 +1,12 @@
 import unittest
 import tempfile
 import os
+from functools import reduce
 
-from hartsim.logparser import strip_preambles, parse_log_file, LogResponseProvider
+from hartsim.logparser import (
+    strip_preambles, parse_log_file, LogResponseProvider,
+    _build_frame, _parse_fdi_hex, FDI_FRAME_PATTERN,
+)
 
 
 class TestLogParser(unittest.TestCase):
@@ -173,6 +177,168 @@ class TestLogResponseProvider(unittest.TestCase):
         }
         provider = LogResponseProvider(request_responses)
         self.assertEqual(provider.get_total_response_count(), 3)
+
+
+class TestFdiParsing(unittest.TestCase):
+
+    def test_parse_fdi_hex(self):
+        self.assertEqual(_parse_fdi_hex('00-50-FE'), bytes([0x00, 0x50, 0xFE]))
+        self.assertEqual(_parse_fdi_hex('AB'), bytes([0xAB]))
+
+    def test_build_frame_short_address_request(self):
+        # POL(0) CMD(0) — short address request
+        match = FDI_FRAME_PATTERN.search('POL(0) CMD(0)')
+        frame = _build_frame(match, is_response=False)
+        # delimiter=0x02, address=0x80 (primary master + addr 0), cmd=0, bytecount=0, checksum
+        expected = bytearray([0x02, 0x80, 0x00, 0x00])
+        expected.append(reduce(lambda x, y: x ^ y, expected))
+        self.assertEqual(frame, bytes(expected))
+
+    def test_build_frame_short_address_response(self):
+        # POL(0) CMD(0) DAT(00-50-FE-26-4A) — short address response
+        match = FDI_FRAME_PATTERN.search('POL(0) CMD(0) DAT(00-50-FE-26-4A)')
+        frame = _build_frame(match, is_response=True)
+        data = bytes([0x00, 0x50, 0xFE, 0x26, 0x4A])
+        expected = bytearray([0x06, 0x00, 0x00, len(data)])
+        expected.extend(data)
+        expected.append(reduce(lambda x, y: x ^ y, expected))
+        self.assertEqual(frame, bytes(expected))
+
+    def test_build_frame_long_address_request(self):
+        # TYP(0x264A) UID(0x2DC704) CMD(128)
+        match = FDI_FRAME_PATTERN.search('TYP(0x264A) UID(0x2DC704) CMD(128)')
+        frame = _build_frame(match, is_response=False)
+        # delimiter=0x82, address: first byte = (0x26>>0)&0x3F | 0x80 = 0x26|0x80 = 0xA6
+        # device_type = 0x264A: high byte = 0x26, low byte = 0x4A
+        # device_id = 0x2DC704
+        expected = bytearray([0x82, 0xA6, 0x4A, 0x2D, 0xC7, 0x04, 128, 0x00])
+        expected.append(reduce(lambda x, y: x ^ y, expected))
+        self.assertEqual(frame, bytes(expected))
+
+    def test_build_frame_long_address_response_with_data(self):
+        # TYP(0x264A) UID(0x2DC704) CMD(0) DAT(00-50-FE)
+        match = FDI_FRAME_PATTERN.search('TYP(0x264A) UID(0x2DC704) CMD(0) DAT(00-50-FE)')
+        frame = _build_frame(match, is_response=True)
+        data = bytes([0x00, 0x50, 0xFE])
+        expected = bytearray([0x86, 0x26, 0x4A, 0x2D, 0xC7, 0x04, 0x00, len(data)])
+        expected.extend(data)
+        expected.append(reduce(lambda x, y: x ^ y, expected))
+        self.assertEqual(frame, bytes(expected))
+
+    def test_build_frame_with_request_data(self):
+        # TYP(0x264A) UID(0x2DC704) CMD(33) DAT(00-01-02-03)
+        match = FDI_FRAME_PATTERN.search('TYP(0x264A) UID(0x2DC704) CMD(33) DAT(00-01-02-03)')
+        frame = _build_frame(match, is_response=False)
+        data = bytes([0x00, 0x01, 0x02, 0x03])
+        expected = bytearray([0x82, 0xA6, 0x4A, 0x2D, 0xC7, 0x04, 33, len(data)])
+        expected.extend(data)
+        expected.append(reduce(lambda x, y: x ^ y, expected))
+        self.assertEqual(frame, bytes(expected))
+
+    def test_parse_fdi_log_file(self):
+        log_content = (
+            '[2025-06-23 15:37:45.617 +05:00 INF  #] Sending "POL(0) CMD(0)"\n'
+            '[2025-06-23 15:37:46.101 +05:00 INF  #] Received "FrameTransmissionResult '
+            '{ Status = Success, Response = POL(0) CMD(0) '
+            'DAT(00-50-FE-26-4A-05-05-01-06-08-00-2D-C7-04) }"\n'
+        )
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False, encoding='utf-8') as f:
+            f.write(log_content)
+            temp_path = f.name
+
+        try:
+            result = parse_log_file(temp_path)
+            self.assertEqual(len(result), 1)
+
+            # Verify request frame was built correctly
+            request_keys = list(result.keys())
+            request = request_keys[0]
+            # Short address: delimiter=0x02, addr=0x80, cmd=0, bc=0, checksum
+            self.assertEqual(request[0], 0x02)  # STX
+            self.assertEqual(request[1], 0x80)  # primary master, addr 0
+            self.assertEqual(request[2], 0x00)  # cmd 0
+
+            # Verify response frame
+            responses = result[request]
+            self.assertEqual(len(responses), 1)
+            self.assertEqual(responses[0][0], 0x06)  # ACK
+        finally:
+            os.unlink(temp_path)
+
+    def test_parse_fdi_log_file_long_address(self):
+        log_content = (
+            '[2025-06-23 15:38:09.119 +05:00 INF  #] Sending "TYP(0x264A) UID(0x2DC704) CMD(128)"\n'
+            '[2025-06-23 15:38:09.120 +05:00 INF  #] Sending "TYP(0x264A) UID(0x2DC704) CMD(128)"\n'
+            '[2025-06-23 15:38:09.676 +05:00 INF  #] Received "FrameTransmissionResult '
+            '{ Status = Success, Response = TYP(0x264A) UID(0x2DC704) CMD(128) '
+            'DAT(00-50-0D-02-0A-02-FB-FB-FB-FB-01-02-00-02-00-00-07-10) }"\n'
+            '[2025-06-23 15:38:09.677 +05:00 INF  #] Received "TYP(0x264A) UID(0x2DC704) CMD(128) '
+            'DAT(00-50-0D-02-0A-02-FB-FB-FB-FB-01-02-00-02-00-00-07-10)" (Success)\n'
+        )
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False, encoding='utf-8') as f:
+            f.write(log_content)
+            temp_path = f.name
+
+        try:
+            result = parse_log_file(temp_path)
+            # Duplicate Sending lines -> only one unique request
+            self.assertEqual(len(result), 1)
+
+            request = list(result.keys())[0]
+            self.assertEqual(request[0], 0x82)  # STX long
+            self.assertEqual(request[6], 128)   # cmd 128
+
+            # Only FrameTransmissionResult response counted, not the simple Received echo
+            responses = result[request]
+            self.assertEqual(len(responses), 1)
+        finally:
+            os.unlink(temp_path)
+
+    def test_parse_fdi_log_skips_non_matching_lines(self):
+        log_content = (
+            '[2025-06-23 15:37:24.515 +05:00 WRN  #] Overriding address(es).\n'
+            '[2025-06-23 15:37:24.584 +05:00 INF  #] Now listening on: "http://0.0.0.0:9000"\n'
+            '[2025-06-23 15:37:45.617 +05:00 INF  #] Sending "POL(0) CMD(0)"\n'
+            '[2025-06-23 15:37:46.101 +05:00 INF  #] Received "FrameTransmissionResult '
+            '{ Status = Success, Response = POL(0) CMD(0) DAT(00-50) }"\n'
+            '[2025-06-23 15:37:50.312 +05:00 WRN  #] Invalid frame received\n'
+        )
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False, encoding='utf-8') as f:
+            f.write(log_content)
+            temp_path = f.name
+
+        try:
+            result = parse_log_file(temp_path)
+            self.assertEqual(len(result), 1)
+        finally:
+            os.unlink(temp_path)
+
+    def test_parse_fdi_log_request_without_response(self):
+        log_content = (
+            '[2025-06-23 15:37:45.617 +05:00 INF  #] Sending "POL(0) CMD(0)"\n'
+            '[2025-06-23 15:37:50.312 +05:00 WRN  #] Invalid frame received\n'
+            '[2025-06-23 15:37:50.314 +05:00 INF  #] Sending "POL(1) CMD(0)"\n'
+            '[2025-06-23 15:37:53.921 +05:00 WRN  #] Invalid frame received\n'
+        )
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False, encoding='utf-8') as f:
+            f.write(log_content)
+            temp_path = f.name
+
+        try:
+            result = parse_log_file(temp_path)
+            self.assertEqual(len(result), 0)
+        finally:
+            os.unlink(temp_path)
+
+    def test_checksum_valid(self):
+        # Verify that built frames have valid checksums (XOR of all preceding bytes)
+        match = FDI_FRAME_PATTERN.search('TYP(0x264A) UID(0x2DC704) CMD(0) DAT(00-50-FE)')
+        frame = _build_frame(match, is_response=True)
+        self.assertEqual(reduce(lambda x, y: x ^ y, frame), 0)
 
 
 if __name__ == '__main__':

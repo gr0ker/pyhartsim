@@ -48,7 +48,11 @@ def handle_request(device: HartDevice, command_number: int, data: bytearray)\
     elif command_number == 34:
         request = Cmd34Request()
         request.deserialize(iter(data))
-        payload = Cmd34Reply.create(device, request)
+        if device.simulate_invalid_selection:
+            payload = Cmd34InvalidSelectionReply.create(device, request)
+        else:
+            payload = Cmd34Reply.create(device, request)
+        device.simulate_invalid_selection = not device.simulate_invalid_selection
     elif command_number == 36:
         payload = Cmd36Reply.create(device)
     elif command_number == 37:
@@ -773,6 +777,17 @@ class Cmd34Request (PayloadSequence):
     pv_damping: F32 = F32()
 
 @dataclass
+class Cmd34InvalidSelectionReply(PayloadSequence):
+    response_code: U8 = U8(3)
+    device_status: U8 = U8()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd34Request):
+        return cls(
+            device_status=device.device_status,
+        )
+    
+@dataclass
 class Cmd34Reply(PayloadSequence):
     response_code: U8 = U8()
     device_status: U8 = U8()
@@ -783,7 +798,7 @@ class Cmd34Reply(PayloadSequence):
         device.pv_damping.set_value(request.pv_damping.get_value())
         return cls(
             device_status=device.device_status,
-            pv_damping=request.pv_damping)
+        pv_damping=request.pv_damping)
 
 @dataclass
 class Cmd36Reply(PayloadSequence):

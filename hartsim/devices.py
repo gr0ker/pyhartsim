@@ -65,6 +65,7 @@ class HartDevice:
     strappingTableVolume: array = field(default_factory=lambda: array('f', [i * 15 for i in range(1, 54)]))
     simulated_variables: dict[int, float] = field(default_factory=dict[int, float])
     pv_damping: F32 = F32(1.23)
+    simulate_invalid_selection: bool = False
     # Device Variables
     # pressure: DeviceVariable = DeviceVariable(12, 1.2345, 65, 192)
     # temperature: DeviceVariable = DeviceVariable(32, 23.456, 0, 192)
