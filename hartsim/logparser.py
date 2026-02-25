@@ -163,6 +163,19 @@ def parse_log_file(file_path: str) -> Dict[bytes, List[bytes]]:
     return _parse_raw_hex_log(file_path)
 
 
+def _extract_command_key(frame: bytes) -> bytes | None:
+    """Extract (delimiter + address + command) prefix from a frame, ignoring data."""
+    if len(frame) < 3:
+        return None
+    is_long = (frame[0] & 0x80) != 0
+    if is_long:
+        # delimiter(1) + address(5) + command(1) = 7 bytes
+        return frame[:7] if len(frame) >= 7 else None
+    else:
+        # delimiter(1) + address(1) + command(1) = 3 bytes
+        return frame[:3]
+
+
 class LogResponseProvider:
     """Provides responses from parsed log data with round-robin selection."""
 
@@ -170,7 +183,17 @@ class LogResponseProvider:
         self._request_responses = request_responses
         self._response_indices: Dict[bytes, int] = {}
 
-    def get_response(self, request: bytes) -> bytes | None:
+        # Build secondary index: command key → list of responses (for fallback)
+        self._command_responses: Dict[bytes, List[bytes]] = {}
+        self._command_indices: Dict[bytes, int] = {}
+        for req, responses in request_responses.items():
+            cmd_key = _extract_command_key(req)
+            if cmd_key is not None:
+                if cmd_key not in self._command_responses:
+                    self._command_responses[cmd_key] = []
+                self._command_responses[cmd_key].extend(responses)
+
+    def get_response(self, request: bytes) -> tuple[bytes | None, bool]:
         """
         Get the next response for a given request.
 
@@ -178,19 +201,25 @@ class LogResponseProvider:
             request: Request frame with preambles stripped
 
         Returns:
-            Response bytes or None if no matching request found
+            Tuple of (response bytes or None, whether fallback matching was used)
         """
-        if request not in self._request_responses:
-            return None
+        if request in self._request_responses:
+            responses = self._request_responses[request]
+            index = self._response_indices.get(request, 0)
+            response = responses[index]
+            self._response_indices[request] = (index + 1) % len(responses)
+            return response, False
 
-        responses = self._request_responses[request]
-        index = self._response_indices.get(request, 0)
-        response = responses[index]
+        # Fallback: match by command number only (ignoring data payload)
+        cmd_key = _extract_command_key(request)
+        if cmd_key is not None and cmd_key in self._command_responses:
+            responses = self._command_responses[cmd_key]
+            index = self._command_indices.get(cmd_key, 0)
+            response = responses[index]
+            self._command_indices[cmd_key] = (index + 1) % len(responses)
+            return response, True
 
-        # Advance to next response (round-robin)
-        self._response_indices[request] = (index + 1) % len(responses)
-
-        return response
+        return None, False
 
     def get_request_count(self) -> int:
         """Return the number of unique requests in the log."""

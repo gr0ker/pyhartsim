@@ -140,6 +140,7 @@ while True:
                 reply_data.extend(reply.serialize())
                 port.dtr = True
                 port.write(reply_data)
+                port.flush()
                 port.dtr = False
                 print(
                     f'{config.port} #{device.polling_address.get_value()} => {reply}')

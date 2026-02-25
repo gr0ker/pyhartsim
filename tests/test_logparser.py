@@ -126,9 +126,10 @@ class TestLogResponseProvider(unittest.TestCase):
         request_responses = {request: [response]}
 
         provider = LogResponseProvider(request_responses)
-        result = provider.get_response(request)
+        result, is_fallback = provider.get_response(request)
 
         self.assertEqual(result, response)
+        self.assertFalse(is_fallback)
 
     def test_get_response_returns_none_for_unknown_request(self):
         request = bytes.fromhex('0280000082')
@@ -137,7 +138,7 @@ class TestLogResponseProvider(unittest.TestCase):
 
         provider = LogResponseProvider(request_responses)
         unknown_request = bytes.fromhex('0281000083')
-        result = provider.get_response(unknown_request)
+        result, is_fallback = provider.get_response(unknown_request)
 
         self.assertIsNone(result)
 
@@ -153,13 +154,39 @@ class TestLogResponseProvider(unittest.TestCase):
         provider = LogResponseProvider(request_responses)
 
         # First round
-        self.assertEqual(provider.get_response(request), responses[0])
-        self.assertEqual(provider.get_response(request), responses[1])
-        self.assertEqual(provider.get_response(request), responses[2])
+        self.assertEqual(provider.get_response(request), (responses[0], False))
+        self.assertEqual(provider.get_response(request), (responses[1], False))
+        self.assertEqual(provider.get_response(request), (responses[2], False))
 
         # Wraps around
-        self.assertEqual(provider.get_response(request), responses[0])
-        self.assertEqual(provider.get_response(request), responses[1])
+        self.assertEqual(provider.get_response(request), (responses[0], False))
+        self.assertEqual(provider.get_response(request), (responses[1], False))
+
+    def test_get_response_fallback_by_command(self):
+        # Request with data=02 in original log
+        request = bytes.fromhex('82996CFFFFFFCC010247')
+        response = bytes.fromhex('86996CFFFFFFCC0300000241')
+        request_responses = {request: [response]}
+
+        provider = LogResponseProvider(request_responses)
+
+        # Different data=01, same command and address
+        different_request = bytes.fromhex('82996CFFFFFFCC010144')
+        result, is_fallback = provider.get_response(different_request)
+
+        self.assertEqual(result, response)
+        self.assertTrue(is_fallback)
+
+    def test_get_response_fallback_not_used_when_exact_match(self):
+        request = bytes.fromhex('82996CFFFFFFCC010247')
+        response = bytes.fromhex('86996CFFFFFFCC0300000241')
+        request_responses = {request: [response]}
+
+        provider = LogResponseProvider(request_responses)
+        result, is_fallback = provider.get_response(request)
+
+        self.assertEqual(result, response)
+        self.assertFalse(is_fallback)
 
     def test_get_request_count(self):
         request_responses = {

@@ -4,7 +4,8 @@ import time
 import serial
 
 from .config import Configuration
-from .logparser import parse_log_file, strip_preambles, LogResponseProvider
+from .framingutils import HartFrameBuilder
+from .logparser import parse_log_file, LogResponseProvider
 
 PREAMBLE_COUNT = 5
 
@@ -46,23 +47,16 @@ def main():
 
     print(f'Listening on {config.port}')
 
-    buffer = bytearray()
-    last_byte_time = 0
-    FRAME_TIMEOUT = 0.1  # 100ms timeout to detect end of frame
+    frame_builder = HartFrameBuilder()
 
     while True:
         if port.in_waiting:
             data = port.read_all()
-            buffer.extend(data)
-            last_byte_time = time.time()
-        elif len(buffer) > 0 and (time.time() - last_byte_time) > FRAME_TIMEOUT:
-            # Frame complete (timeout reached)
-            request_with_preambles = bytes(buffer)
-            request = strip_preambles(request_with_preambles)
-
-            if len(request) > 0:
+            if frame_builder.collect(iter(data)):
+                frame = frame_builder.dequeue()
+                request = bytes(frame.serialize())
                 request_hex = request.hex().upper()
-                response = provider.get_response(request)
+                response, is_fallback = provider.get_response(request)
 
                 if response is not None:
                     # Prepend preambles and send response
@@ -71,15 +65,15 @@ def main():
 
                     port.dtr = True
                     port.write(reply_data)
+                    port.flush()
                     port.dtr = False
 
                     response_hex = response.hex().upper()
+                    match_type = ' (fallback)' if is_fallback else ''
                     print(f'{config.port} <= {request_hex}')
-                    print(f'{config.port} => {response_hex}')
+                    print(f'{config.port} => {response_hex}{match_type}')
                 else:
                     print(f'{config.port} <= {request_hex} (no match)')
-
-            buffer.clear()
         else:
             time.sleep(0.01)
 
