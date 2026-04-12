@@ -162,6 +162,45 @@ class F32(Payload):
         self.set_value(struct.unpack('>f', self.__serialized)[0])
 
 
+class F32Array(Payload):
+    """Массив float фиксированного размера (big-endian IEEE 754)."""
+    def __init__(self,
+                 count: int,
+                 values: list[float] | None = None,
+                 is_optional: bool = False):
+        self._count = count
+        self._values = list(values) if values is not None else [float('nan')] * count
+        super().__init__(is_optional)
+
+    def get_size(self):
+        return self._count * FLOAT_SIZE
+
+    def get_value(self) -> list[float]:
+        return list(self._values)
+
+    def set_value(self, values: list[float]):
+        self._values = list(values)
+
+    def __iter__(self):
+        self._serialized = struct.pack(f'>{self._count}f', *self._values)
+        super().__iter__()
+        return self
+
+    def __next__(self):
+        if self._offset < len(self._serialized):
+            result = self._serialized[self._offset]
+            self._offset += 1
+            return result
+        else:
+            raise StopIteration
+
+    def _deserialize(self, iterator: Iterator[int]):
+        data = bytearray()
+        for _ in range(self._count * FLOAT_SIZE):
+            data.append(next(iterator) & FULL_BYTE_MASK)
+        self._values = list(struct.unpack(f'>{self._count}f', data))
+
+
 class Ascii(Payload):
     def __init__(self,
                  size: int,

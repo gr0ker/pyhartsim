@@ -1,3 +1,4 @@
+import math
 import sys
 
 import serial
@@ -87,14 +88,62 @@ device150 = HartDevice(
     hart_tag=PackedAscii(8, "3051 r9"),
     hart_long_tag=Ascii(32, "This is 3051 rev 9        "))
 
+# Waveform-данные для device_f9f5
+_lin_x = [4.0 + i * (16.0 / 9.0) for i in range(10)]
+_lin_y = [i * (100.0 / 9.0) for i in range(10)]
+_kp_idx = [0, 2, 4, 6, 9]
+_kp_x = [_lin_x[i] for i in _kp_idx]
+_kp_y = [_lin_y[i] for i in _kp_idx]
+_sen_x = list(_lin_x)
+_sen_y = [100.0 * ((x - 4.0) / 16.0) ** 2 for x in _sen_x]
+_yt = [50.0 + 40.0 * math.sin(i * 0.5) for i in range(20)]
+_ro_yt = [50.0 + 30.0 * math.cos(i * 0.5) for i in range(20)]
+
+device_f9f5 = HartDevice(
+    device_variables={
+        0: DeviceVariable(U8(12), U8(12), F32(1.2345), F32(sys.float_info.min), F32(sys.float_info.max), F32(250), F32(0), U8(65), U8(192)),
+        1: DeviceVariable(U8(32), U8(32), F32(23.456), F32(sys.float_info.min), F32(sys.float_info.max), F32(100), F32(-100), U8(0), U8(192)),
+    },
+    dynamic_variables={
+        0: 0,
+        1: 1,
+        2: 0,
+        3: 1,
+    },
+    manufacturer_code=U16(0x00F9),
+    device_revision=U8(3),
+    private_label_distributor=U16(0x00F9),
+    polling_address=U8(2),
+    long_address=0x3FFFFFFFFF & 0xF9F5ABCDEF,
+    expanded_device_type=U16(0xF9F5),
+    device_id=U24(0xABCDEF),
+    hart_tag=PackedAscii(8, "SAMPLE7"),
+    hart_long_tag=Ascii(32, "Sample HART 7 DD device         "),
+    device_status=U8(0x00),
+    waveform_lin_x=_lin_x,
+    waveform_lin_y=_lin_y,
+    waveform_kp_x=_kp_x,
+    waveform_kp_y=_kp_y,
+    waveform_sen_x=_sen_x,
+    waveform_sen_y=_sen_y,
+    waveform_yt=_yt,
+    waveform_ro_yt=_ro_yt,
+    waveform_hi_alarm=90.0,
+    waveform_lo_alarm=10.0,
+    waveform_marker_1=8.0,
+    waveform_marker_2=16.0,
+    waveform_initialized=1.0)
+
 poll_map = {
     device3051.polling_address.get_value(): device3051,
-    device150.polling_address.get_value(): device150
+    device150.polling_address.get_value(): device150,
+    device_f9f5.polling_address.get_value(): device_f9f5
 }
 
 unique_map = {
     device3051.long_address: device3051,
-    device150.long_address: device150
+    device150.long_address: device150,
+    device_f9f5.long_address: device_f9f5
 }
 
 for short_address in poll_map:

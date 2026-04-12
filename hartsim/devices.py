@@ -66,6 +66,24 @@ class HartDevice:
     simulated_variables: dict[int, float] = field(default_factory=dict[int, float])
     pv_damping: F32 = F32(1.23)
     simulate_invalid_selection: bool = False
+    # Идентификация (для динамического Cmd0)
+    manufacturer_code: U16 = U16(0x0099)
+    device_revision: U8 = U8(7)
+    private_label_distributor: U16 = U16(0x0099)
+    # Waveform-данные для WaveformEditing
+    waveform_lin_x: list = field(default_factory=list)
+    waveform_lin_y: list = field(default_factory=list)
+    waveform_kp_x: list = field(default_factory=list)
+    waveform_kp_y: list = field(default_factory=list)
+    waveform_sen_x: list = field(default_factory=list)
+    waveform_sen_y: list = field(default_factory=list)
+    waveform_yt: list = field(default_factory=list)
+    waveform_ro_yt: list = field(default_factory=list)
+    waveform_hi_alarm: float = 90.0
+    waveform_lo_alarm: float = 10.0
+    waveform_marker_1: float = 8.0
+    waveform_marker_2: float = 16.0
+    waveform_initialized: float = 1.0
     # Device Variables
     # pressure: DeviceVariable = DeviceVariable(12, 1.2345, 65, 192)
     # temperature: DeviceVariable = DeviceVariable(32, 23.456, 0, 192)

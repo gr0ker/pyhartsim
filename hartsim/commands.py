@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from .payloads import F32, U16, U24, U32, U8, Ascii, GreedyU8Array, PackedAscii
+from .payloads import F32, F32Array, U16, U24, U32, U8, Ascii, GreedyU8Array, PackedAscii
 from .payloads import PayloadSequence
 from .devices import HartDevice
 
@@ -175,6 +175,26 @@ def _dispatch_command(device: HartDevice, command_number: int, data: bytearray):
         payload = Cmd220Reply.create(device)
     elif command_number == 222:
         payload = Cmd222Reply.create(device)
+    elif command_number == 230:
+        payload = Cmd230Reply.create(device)
+    elif command_number == 231:
+        request = Cmd231Request()
+        request.deserialize(iter(data))
+        payload = Cmd231Reply.create(device, request)
+    elif command_number == 232:
+        payload = Cmd232Reply.create(device)
+    elif command_number == 233:
+        payload = Cmd233Reply.create(device)
+    elif command_number == 234:
+        request = Cmd234Request()
+        request.deserialize(iter(data))
+        payload = Cmd234Reply.create(device, request)
+    elif command_number == 235:
+        payload = Cmd235Reply.create(device)
+    elif command_number == 236:
+        request = Cmd236Request()
+        request.deserialize(iter(data))
+        payload = Cmd236Reply.create(device, request)
     else:
         payload = ErrorReply.create(device, U8(64))
 
@@ -200,7 +220,8 @@ class Cmd0Hart5Reply (PayloadSequence):
         return cls(
             device_status=device.device_status,
             expanded_device_type=device.expanded_device_type,
-            device_id=device.device_id)
+            device_id=device.device_id,
+            device_revision=device.device_revision)
 
 
 @dataclass
@@ -231,7 +252,10 @@ class Cmd0Hart7Reply (PayloadSequence):
             expanded_device_type=device.expanded_device_type,
             device_id=device.device_id,
             config_change_counter=device.config_change_counter,
-            extended_device_status=device.extended_device_status)
+            extended_device_status=device.extended_device_status,
+            manufacturer_code=device.manufacturer_code,
+            device_revision=device.device_revision,
+            private_label_distributor=device.private_label_distributor)
 
 
 @dataclass
@@ -1641,6 +1665,161 @@ class Cmd222Reply (PayloadSequence):
     def create(cls, device: HartDevice):
         return cls(
             device_status=device.device_status)
+
+
+@dataclass
+class Cmd230Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    lin_x: F32Array = F32Array(10)
+    lin_y: F32Array = F32Array(10)
+    kp_x: F32Array = F32Array(5)
+    kp_y: F32Array = F32Array(5)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status,
+            lin_x=F32Array(10, device.waveform_lin_x),
+            lin_y=F32Array(10, device.waveform_lin_y),
+            kp_x=F32Array(5, device.waveform_kp_x),
+            kp_y=F32Array(5, device.waveform_kp_y))
+
+
+@dataclass
+class Cmd231Request(PayloadSequence):
+    lin_x: F32Array = F32Array(10)
+    lin_y: F32Array = F32Array(10)
+    kp_x: F32Array = F32Array(5)
+    kp_y: F32Array = F32Array(5)
+
+
+@dataclass
+class Cmd231Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    lin_x: F32Array = F32Array(10)
+    lin_y: F32Array = F32Array(10)
+    kp_x: F32Array = F32Array(5)
+    kp_y: F32Array = F32Array(5)
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd231Request):
+        device.waveform_lin_x = request.lin_x.get_value()
+        device.waveform_lin_y = request.lin_y.get_value()
+        device.waveform_kp_x = request.kp_x.get_value()
+        device.waveform_kp_y = request.kp_y.get_value()
+        return cls(
+            device_status=device.device_status,
+            lin_x=F32Array(10, device.waveform_lin_x),
+            lin_y=F32Array(10, device.waveform_lin_y),
+            kp_x=F32Array(5, device.waveform_kp_x),
+            kp_y=F32Array(5, device.waveform_kp_y))
+
+
+@dataclass
+class Cmd232Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    sen_x: F32Array = F32Array(10)
+    sen_y: F32Array = F32Array(10)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status,
+            sen_x=F32Array(10, device.waveform_sen_x),
+            sen_y=F32Array(10, device.waveform_sen_y))
+
+
+@dataclass
+class Cmd233Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    yt: F32Array = F32Array(20)
+    ro_yt: F32Array = F32Array(20)
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status,
+            yt=F32Array(20, device.waveform_yt),
+            ro_yt=F32Array(20, device.waveform_ro_yt))
+
+
+@dataclass
+class Cmd234Request(PayloadSequence):
+    yt: F32Array = F32Array(20)
+
+
+@dataclass
+class Cmd234Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    yt: F32Array = F32Array(20)
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd234Request):
+        device.waveform_yt = request.yt.get_value()
+        return cls(
+            device_status=device.device_status,
+            yt=F32Array(20, device.waveform_yt))
+
+
+@dataclass
+class Cmd235Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    hi_alarm: F32 = F32()
+    lo_alarm: F32 = F32()
+    marker_1: F32 = F32()
+    marker_2: F32 = F32()
+    initialized: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice):
+        return cls(
+            device_status=device.device_status,
+            hi_alarm=F32(device.waveform_hi_alarm),
+            lo_alarm=F32(device.waveform_lo_alarm),
+            marker_1=F32(device.waveform_marker_1),
+            marker_2=F32(device.waveform_marker_2),
+            initialized=F32(device.waveform_initialized))
+
+
+@dataclass
+class Cmd236Request(PayloadSequence):
+    hi_alarm: F32 = F32()
+    lo_alarm: F32 = F32()
+    marker_1: F32 = F32()
+    marker_2: F32 = F32()
+    initialized: F32 = F32()
+
+
+@dataclass
+class Cmd236Reply(PayloadSequence):
+    response_code: U8 = U8()
+    device_status: U8 = U8()
+    hi_alarm: F32 = F32()
+    lo_alarm: F32 = F32()
+    marker_1: F32 = F32()
+    marker_2: F32 = F32()
+    initialized: F32 = F32()
+
+    @classmethod
+    def create(cls, device: HartDevice, request: Cmd236Request):
+        device.waveform_hi_alarm = request.hi_alarm.get_value()
+        device.waveform_lo_alarm = request.lo_alarm.get_value()
+        device.waveform_marker_1 = request.marker_1.get_value()
+        device.waveform_marker_2 = request.marker_2.get_value()
+        device.waveform_initialized = request.initialized.get_value()
+        return cls(
+            device_status=device.device_status,
+            hi_alarm=F32(device.waveform_hi_alarm),
+            lo_alarm=F32(device.waveform_lo_alarm),
+            marker_1=F32(device.waveform_marker_1),
+            marker_2=F32(device.waveform_marker_2),
+            initialized=F32(device.waveform_initialized))
 
 
 @dataclass
