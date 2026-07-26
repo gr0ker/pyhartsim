@@ -262,6 +262,40 @@ class TestFdiParsing(unittest.TestCase):
         expected.append(reduce(lambda x, y: x ^ y, expected))
         self.assertEqual(frame, bytes(expected))
 
+    def test_build_frame_extended_command_request(self):
+        # TYP(0x996C) UID(0xFFFFFF) CMD(523) DAT(00-30) — extended command 523 = 0x020B
+        match = FDI_FRAME_PATTERN.search('TYP(0x996C) UID(0xFFFFFF) CMD(523) DAT(00-30)')
+        frame = _build_frame(match, is_response=False)
+        # command-31 wrapper: data = U16 extended number + payload
+        data = bytes([0x02, 0x0B, 0x00, 0x30])
+        expected = bytearray([0x82, (0x99 & 0x3F) | 0x80, 0x6C, 0xFF, 0xFF, 0xFF, 31, len(data)])
+        expected.extend(data)
+        expected.append(reduce(lambda x, y: x ^ y, expected))
+        self.assertEqual(frame, bytes(expected))
+
+    def test_build_frame_extended_command_response(self):
+        # TYP(0x196C) UID(0xFFFFFF) CMD(523) DAT(40-00) — RC 0x40, status 0x00, no payload
+        match = FDI_FRAME_PATTERN.search('TYP(0x196C) UID(0xFFFFFF) CMD(523) DAT(40-00)')
+        frame = _build_frame(match, is_response=True)
+        # command-31 wrapper: data = RC + status + U16 extended number + payload
+        data = bytes([0x40, 0x00, 0x02, 0x0B])
+        expected = bytearray([0x86, 0x19 & 0x3F, 0x6C, 0xFF, 0xFF, 0xFF, 31, len(data)])
+        expected.extend(data)
+        expected.append(reduce(lambda x, y: x ^ y, expected))
+        self.assertEqual(frame, bytes(expected))
+
+    def test_build_frame_extended_command_response_with_payload(self):
+        # CMD(534) = 0x0216, response payload after RC + status
+        match = FDI_FRAME_PATTERN.search(
+            'TYP(0x196C) UID(0xFFFFFF) CMD(534) DAT(00-00-00-00-FA-7F-A0-00-00-00)')
+        frame = _build_frame(match, is_response=True)
+        data = bytes([0x00, 0x00, 0x02, 0x16,
+                      0x00, 0x00, 0xFA, 0x7F, 0xA0, 0x00, 0x00, 0x00])
+        expected = bytearray([0x86, 0x19 & 0x3F, 0x6C, 0xFF, 0xFF, 0xFF, 31, len(data)])
+        expected.extend(data)
+        expected.append(reduce(lambda x, y: x ^ y, expected))
+        self.assertEqual(frame, bytes(expected))
+
     def test_parse_fdi_log_file(self):
         log_content = (
             '[2025-06-23 15:37:45.617 +05:00 INF  #] Sending "POL(0) CMD(0)"\n'

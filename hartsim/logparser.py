@@ -25,6 +25,7 @@ _STX_LONG = 0x82
 _ACK_SHORT = 0x06
 _ACK_LONG = 0x86
 _PRIMARY_MASTER_MASK = 0x80
+_EXTENDED_COMMAND = 31
 
 
 def strip_preambles(data: bytes) -> bytes:
@@ -70,6 +71,18 @@ def _build_frame(match: re.Match, is_response: bool) -> bytes | None:
         if not is_response:
             addr_byte |= _PRIMARY_MASTER_MASK
         address_bytes = bytes([addr_byte])
+
+    if command > 0xFF:
+        # Extended command: the wire frame is a command-31 wrapper.
+        # Request data:  U16 extended number + payload.
+        # Response data: response code + device status + U16 extended number + payload
+        # (mirrors Cmd31Request/Cmd31Reply in commands.py).
+        extended = bytes([(command >> 8) & 0xFF, command & 0xFF])
+        if is_response:
+            data = data[:2] + extended + data[2:]
+        else:
+            data = extended + data
+        command = _EXTENDED_COMMAND
 
     frame = bytearray()
     frame.append(delimiter)
