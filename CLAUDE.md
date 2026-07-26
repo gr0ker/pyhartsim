@@ -37,14 +37,16 @@ PATH; prefer the explicit commands above unless the venv is activated.
 
 ## Running the simulator
 
-`python -m hartsim.hartsim` opens a serial port (1200 baud, odd parity) set by
-`hartsim/config.py` (`Configuration.port`, currently `COM2`) and runs the
-request/response loop. Without a real or virtual serial port the live loop can't
-be exercised — logic is verified via the unit tests, not by running the loop.
+`python -m hartsim.hartsim` opens a serial port (1200 baud, odd parity) and runs
+the request/response loop. Port selection: `HARTSIM_PORT` env var, else the
+`COM2` default in `hartsim/config.py`. Without a real or virtual serial port the
+live loop can't be exercised — logic is verified via the unit tests, not by
+running the loop.
 
-Log-based replay: `python -m hartsim.logsim path/to/logfile.log` replays
-request/response pairs captured from real HART traffic instead of simulating
-device logic.
+Log-based replay: `python -m hartsim.logsim path/to/logfile.log [--port COMn]`
+replays request/response pairs captured from real HART traffic instead of
+simulating device logic. Both raw-hex and FDI structured log formats are
+auto-detected; extended commands (>255) are rebuilt as command-31 wrapper frames.
 
 ## Architecture
 

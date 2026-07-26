@@ -1,3 +1,4 @@
+import argparse
 import sys
 import time
 
@@ -11,11 +12,15 @@ PREAMBLE_COUNT = 5
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python -m hartsim.logsim <logfile>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        prog='python -m hartsim.logsim',
+        description='Replay a recorded HART communication log over a serial port.')
+    parser.add_argument('logfile', help='path to the recorded log file')
+    parser.add_argument('--port', default=None,
+                        help='serial port name (default: HARTSIM_PORT env var or COM2)')
+    args = parser.parse_args()
 
-    log_file = sys.argv[1]
+    log_file = args.logfile
     print(f'Loading log file: {log_file}')
 
     try:
@@ -35,6 +40,8 @@ def main():
         print('Warning: No request/response pairs found in log file')
 
     config = Configuration()
+    if args.port:
+        config.port = args.port
     port = serial.Serial(config.port,
                          baudrate=1200,
                          parity=serial.PARITY_ODD,
